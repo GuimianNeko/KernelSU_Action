@@ -52,27 +52,28 @@ index 087f003b9674..895ba941c398 100644
  }
  
 diff --git a/fs/open.c b/fs/open.c
-index 998303c7b72e..d9541e222763 100644
+index 2ff887661237..e758d7db7663 100644
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -348,6 +348,9 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
- 	return ksys_fallocate(fd, mode, offset, len);
+@@ -355,6 +355,9 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return error;
  }
  
 +extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
-+			 int *flags);
++			        int *flags);
 +
  /*
   * access() needs to use the real uid/gid, not the effective uid/gid.
   * We do this by temporarily clearing all FS-related capabilities and
-@@ -355,6 +358,7 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
-  */
- long do_faccessat(int dfd, const char __user *filename, int mode)
- {
+@@ -370,6 +373,8 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+ 	int res;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW;
+ 
 +	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
- 	const struct cred *old_cred;
- 	struct cred *override_cred;
- 	struct path path;
++
+ 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+ 		return -EINVAL;
+
 diff --git a/fs/read_write.c b/fs/read_write.c
 index 650fc7e0f3a6..29740df1519e 100644
 --- a/fs/read_write.c
@@ -94,27 +95,28 @@ index 650fc7e0f3a6..29740df1519e 100644
  		return -EBADF;
  	if (!(file->f_mode & FMODE_CAN_READ))
 diff --git a/fs/stat.c b/fs/stat.c
-index 376543199b5a..b35e21047ce7 100644
+index 068fdbcc9e26..5348b7bb9db2 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
-@@ -148,6 +148,8 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
+@@ -87,6 +87,8 @@ int vfs_fstat(unsigned int fd, struct kstat *stat)
  }
- EXPORT_SYMBOL(vfs_statx_fd);
+ EXPORT_SYMBOL(vfs_fstat);
  
 +extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 +
- /**
-  * vfs_statx - Get basic and extra attributes by filename
-  * @dfd: A file descriptor representing the base dir for a relative filename
-@@ -170,6 +172,8 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
+ int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
+ 		int flag)
+ {
+@@ -94,6 +96,8 @@ int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
  	int error = -EINVAL;
- 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
+ 	unsigned int lookup_flags = 0;
  
-+	ksu_handle_stat(&dfd, &filename, &flags);
++	ksu_handle_stat(&dfd, &filename, &flag);
 +
- 	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
- 		       AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
- 		return -EINVAL;
+ 	if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
+ 		      AT_EMPTY_PATH)) != 0)
+ 		goto out;
+
 -- 
 2.34.1
 
