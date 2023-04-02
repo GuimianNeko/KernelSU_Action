@@ -80,7 +80,6 @@ jobs:
                 git apply ../../KernelSU.patch
             else
                 echo "KernelSU Patching failed"
-                exit
             fi
         fi
         if [ ${{ env.USE_OVERLAYFS }} = true ]; then
