@@ -32,16 +32,15 @@ index 159dd87b93b0..e8bfe037e705 100644
  	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
  		add_input_randomness(type, code, value);
 diff --git a/fs/exec.c b/fs/exec.c
-index 087f003b9674..895ba941c398 100644
+index ac59664eaecf..bdd585e1d2cc 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -1929,11 +1929,15 @@ static int __do_execve_file(int fd, struct filename *filename,
+@@ -1838,11 +1838,14 @@ static int __do_execve_file(int fd, struct filename *filename,
  	return retval;
  }
  
 +extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 +			void *envp, int *flags);
-+
  static int do_execveat_common(int fd, struct filename *filename,
  			      struct user_arg_ptr argv,
  			      struct user_arg_ptr envp,
@@ -73,24 +72,22 @@ index 2ff887661237..e758d7db7663 100644
 +
  	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
  		return -EINVAL;
-
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 650fc7e0f3a6..29740df1519e 100644
+index 650fc7e0f3a6..55be193913b6 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -434,10 +434,15 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
+@@ -483,10 +483,14 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
  }
  EXPORT_SYMBOL(kernel_read);
  
 +extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
 +			size_t *count_ptr, loff_t **pos);
-+
  ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
  	ssize_t ret;
  
 +	ksu_handle_vfs_read(&file, &buf, &count, &pos);
-+
++	
  	if (!(file->f_mode & FMODE_READ))
  		return -EBADF;
  	if (!(file->f_mode & FMODE_CAN_READ))
