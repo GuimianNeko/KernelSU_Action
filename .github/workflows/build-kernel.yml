@@ -91,7 +91,7 @@ jobs:
         fi
         wget https://github.com/tiann/KernelSU/commit/8fbdd996de69abd107f147218881ae1aa72ef565.patch
         cd KernelSU
-        git apply 8fbdd996de69abd107f147218881ae1aa72ef565.patch
+        git apply ../8fbdd996de69abd107f147218881ae1aa72ef565.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
