@@ -89,6 +89,8 @@ jobs:
             sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
             echo "CONFIG_LTO_NONE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         fi
+        wget https://github.com/tiann/KernelSU/commit/8fbdd996de69abd107f147218881ae1aa72ef565.patch
+        patch -p1 -R < 8fbdd996de69abd107f147218881ae1aa72ef565.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
