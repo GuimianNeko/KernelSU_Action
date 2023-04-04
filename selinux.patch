@@ -1,0 +1,35 @@
+--- KernelSU/kernel/selinux/selinux.c	2023-04-02 15:37:38.615045003 +0800
++++ KernelSU/kernel/selinux/selinux1.c	2023-04-05 02:25:26.770975500 +0800
+@@ -60,7 +60,7 @@
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
+ 	selinux_state.enforcing = enforce;
+ #else
+-	selinux_enforcing = enforce;
++	selinux_enforcing_boot = enforce;
+ #endif
+ #endif
+ }
+@@ -81,7 +81,7 @@
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
+ 	return selinux_state.enforcing;
+ #else
+-	return selinux_enforcing;
++	return selinux_enforcing_boot;
+ #endif
+ #else
+ 	return true;
+@@ -92,12 +92,12 @@
+ /*
+  * get the subjective security ID of the current task
+  */
+-static inline u32 current_sid(void)
++/*static inline u32 current_sid(void)
+ {
+ 	const struct task_security_struct *tsec = current_security();
+ 
+ 	return tsec->sid;
+-}
++}*/
+ #endif
+ 
+ bool is_ksu_domain()
