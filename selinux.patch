@@ -1,16 +1,38 @@
---- KernelSU/kernel/selinux/selinux.c	2023-04-02 15:37:38.615045003 +0800
-+++ KernelSU/kernel/selinux/selinux1.c	2023-04-05 02:25:26.770975500 +0800
-@@ -60,7 +60,7 @@
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
+--- KernelSU/kernel/selinux/selinux.c	2023-04-05 03:20:37.308496960 +0800
++++ KernelSU/kernel/selinux/selinux1.c	2023-04-05 03:17:42.332496949 +0800
+@@ -2,7 +2,7 @@
+ #include "objsec.h"
+ #include "linux/version.h"
+ #include "../klog.h" // IWYU pragma: keep
+-#if ((KERNEL_VERSION(4, 14, 0) <= LINUX_VERSION_CODE) && (LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 163))) || (LINUX_VERSION_CODE < KERNEL_VERSION(4, 9, 337))
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 17, 0)
+ #include "avc.h"
+ #endif
+ 
+@@ -57,7 +57,7 @@
+ void setenforce(bool enforce)
+ {
+ #ifdef CONFIG_SECURITY_SELINUX_DEVELOP
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
  	selinux_state.enforcing = enforce;
  #else
--	selinux_enforcing = enforce;
-+	selinux_enforcing_boot = enforce;
+ 	selinux_enforcing = enforce;
+@@ -68,7 +68,7 @@
+ bool getenforce()
+ {
+ #ifdef CONFIG_SECURITY_SELINUX_DISABLE
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
+ 	if (selinux_state.disabled) {
+ #else
+ 	if (selinux_disabled) {
+@@ -78,10 +78,10 @@
  #endif
- #endif
- }
-@@ -81,7 +81,7 @@
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
+ 
+ #ifdef CONFIG_SECURITY_SELINUX_DEVELOP
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 163)) || ((KERNEL_VERSION(4, 10, 0) > LINUX_VERSION_CODE) && (LINUX_VERSION_CODE  >= KERNEL_VERSION(4, 9, 337)))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
  	return selinux_state.enforcing;
  #else
 -	return selinux_enforcing;
