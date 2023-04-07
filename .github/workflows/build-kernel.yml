@@ -27,7 +27,6 @@ jobs:
         echo "USE_OVERLAYFS=$(cat config.env | grep "USE_OVERLAYFS" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "NEED_DTBO=$(cat config.env | grep "NEED_DTBO" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "MAKE_BOOT_IMAGE=$(cat config.env | grep "MAKE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "SOURCE_BOOT_IMAGE=$(cat config.env | grep "SOURCE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
 
     - name: Setup build kernel environment
       run: |
@@ -57,7 +56,7 @@ jobs:
       if: env.MAKE_BOOT_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        wget -O boot-source.img ${{ env.SOURCE_BOOT_IMAGE }}
+        tar -xf ../boot.tar.gz
         if [ -f boot-source.img ]; then
             echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
