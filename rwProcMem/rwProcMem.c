@@ -1,5 +1,7 @@
 #include "sys.h"
 
+struct module __this_module;
+
 MY_STATIC int rwProcMem_open(struct inode *inode, struct file *filp)
 {
 	//将设备结构体指针赋值给文件私有数据指针
