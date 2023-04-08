@@ -1,0 +1,8 @@
+config rwProcMem
+	tristate "rwProcMem module"
+	default y
+	depends on KPROBES
+	depends on OVERLAY_FS
+	help
+	This is the rwProcMem privilege driver for android system.
+
