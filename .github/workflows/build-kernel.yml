@@ -170,7 +170,7 @@ jobs:
         name: boot${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/boot.img
     
-    -name: Upload To Telegram
+    - name: Upload To Telegram
       if: env.MAKE_BOOT_IMAGE_IS_OK == 'true'
       run: |
         ./upload.sh kernel_workspace/boot.img
