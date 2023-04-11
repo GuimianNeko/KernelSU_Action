@@ -177,3 +177,5 @@ jobs:
         chmod +x upload.sh
         ./upload.sh kernel_workspace/boot.img
         ./upload.sh kernel_workspace/AnyKernel3/dtbo.img
+      env: bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chatid: ${{ secrets.TELEGRAM_CHAT_ID }}

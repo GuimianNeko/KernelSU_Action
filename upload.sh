@@ -1,1 +1,1 @@
-curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument --form chat_id=${{ secrets.TELEGRAM_CHAT_ID }} --form document=@$1
+curl -X POST https://api.telegram.org/bot$bottoken/sendDocument --form chat_id=$chatid --form document=@$1

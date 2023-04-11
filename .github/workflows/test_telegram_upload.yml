@@ -14,5 +14,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Upload
       run: |
-        curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument --form chat_id=${{ secrets.TELEGRAM_CHAT_ID }} --form document=@`which bash`
+        chmod +x ./upload.sh
+        
+      env: bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
 
