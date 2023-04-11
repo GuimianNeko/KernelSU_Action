@@ -15,7 +15,7 @@ jobs:
     - name: Upload
       run: |
         chmod +x ./upload.sh
-        
+        ./upload.sh `which ls`
       env: bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
 
