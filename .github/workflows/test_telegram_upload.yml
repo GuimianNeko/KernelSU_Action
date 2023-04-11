@@ -18,6 +18,6 @@ jobs:
         bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
         chmod +x ./upload.sh
-        echo $chatid
+        ./upload.sh `which ls`
       
 
