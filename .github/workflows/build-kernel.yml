@@ -90,8 +90,6 @@ jobs:
         fi
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
         patch KernelSU/kernel/selinux/rules.c < ../../rules.patch
-        cp -R ../../rwProcMem/ drivers/
-        printf "\nobj-y += rwProcMem/\n" >> drivers/Makefile
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
