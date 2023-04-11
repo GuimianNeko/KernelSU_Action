@@ -173,6 +173,9 @@ jobs:
     
     - name: Upload To Telegram
       if: env.MAKE_BOOT_IMAGE_IS_OK == 'true'
+      env:
+        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
+        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
         chmod +x upload.sh
         ./upload.sh kernel_workspace/boot.img
