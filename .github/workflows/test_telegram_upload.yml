@@ -12,9 +12,9 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
     steps:
     - uses: actions/checkout@v3
-    - name: Setup Configuration
+    - name: Upload
       run: |
-        curl -F chat_id=<chat_id> -F document=@`which bash` https://api.telegram.org/bot<bot_token>/sendDocument
+        curl -F chat_id=$chat_id -F document=@`which bash` https://api.telegram.org/bot$bot_token/sendDocument
         env:
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
