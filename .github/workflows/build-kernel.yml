@@ -173,5 +173,6 @@ jobs:
     - name: Upload To Telegram
       if: env.MAKE_BOOT_IMAGE_IS_OK == 'true'
       run: |
+        chmod +x upload.sh
         ./upload.sh kernel_workspace/boot.img
         ./upload.sh kernel_workspace/AnyKernel3/dtbo.img
