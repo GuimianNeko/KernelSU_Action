@@ -179,4 +179,4 @@ jobs:
       run: |
         chmod +x upload.sh
         ./upload.sh kernel_workspace/boot.img
-        ./upload.sh kernel_workspace/AnyKernel3/dtbo.img
+        ./upload.sh kernel_workspace/android-kernel/out/arch/${{ env.TARGET_ARCH }}/boot/dtbo.img
