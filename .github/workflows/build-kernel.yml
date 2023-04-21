@@ -89,7 +89,6 @@ jobs:
             echo "CONFIG_LTO_NONE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         fi
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
-       # patch KernelSU/kernel/selinux/rules.c < ../../rules.patch
         patch drivers/input/input.c < ../../kernel.patch
         cp ../../polaris_defconfig arch/arm64/configs
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
