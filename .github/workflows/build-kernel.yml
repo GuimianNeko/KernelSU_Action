@@ -54,6 +54,7 @@ jobs:
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         cp ../../polaris_defconfig arch/arm64/configs/polaris_defconfig
+        patch arch/arm64/kernel/vdso32/Makefile < ../../vdso32_Makefile.patch
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'

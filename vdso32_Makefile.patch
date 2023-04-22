@@ -1,0 +1,11 @@
+--- arch/arm64/kernel/vdso32/Makefile	2023-04-21 21:33:16.368488106 +0800
++++ arch/arm64/kernel/vdso32/Makefile1	2023-04-22 15:45:17.202887988 +0800
+@@ -94,7 +94,7 @@
+ # From arm vDSO Makefile
+ VDSO_LDFLAGS += -Wl,-Bsymbolic -Wl,--no-undefined -Wl,-soname=linux-vdso.so.1
+ VDSO_LDFLAGS += -Wl,-z,max-page-size=4096 -Wl,-z,common-page-size=4096
+-VDSO_LDFLAGS += -nostdlib -shared -mfloat-abi=soft
++VDSO_LDFLAGS += -nostdlib -shared -mfloat-abi=soft -z noexecstack
+ VDSO_LDFLAGS += $(call cc32-ldoption,-Wl$(comma)--hash-style=sysv)
+ VDSO_LDFLAGS += $(call cc32-ldoption,-Wl$(comma)--build-id)
+ VDSO_LDFLAGS += $(call cc32-ldoption,-fuse-ld=bfd)
