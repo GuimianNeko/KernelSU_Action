@@ -1,5 +1,5 @@
---- KernelSU/kernel/selinux/selinux.c	2023-04-05 03:20:37.308496960 +0800
-+++ KernelSU/kernel/selinux/selinux1.c	2023-04-21 10:47:41.824180720 +0800
+--- KernelSU/kernel/selinux/selinux.c	2023-04-23 15:39:02.808642550 +0800
++++ KernelSU/kernel/selinux/selinux1.c	2023-04-23 15:41:44.724642560 +0800
 @@ -92,12 +92,12 @@
  /*
   * get the subjective security ID of the current task
