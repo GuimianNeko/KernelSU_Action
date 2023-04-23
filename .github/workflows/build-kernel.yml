@@ -39,7 +39,7 @@ jobs:
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --depth 1 https://gitlab.com/jjpprrrr/prelude-clang.git clang
+        git clone -b amd64-kernel-arm --depth 1 https://codeberg.org/Mandi-Sa/clang.git clang
         chmod -R +x clang
 
     - name: Download mkbootimg tools
@@ -52,9 +52,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        cp ../../polaris_defconfig arch/arm64/configs/polaris_defconfig
-        patch arch/arm64/kernel/vdso32/Makefile < ../../vdso32_Makefile.patch
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -92,6 +89,8 @@ jobs:
             sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
             echo "CONFIG_LTO_NONE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         fi
+        patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
+        patch KernelSU/kernel/selinux/rules.c < ../../rules.patch
         patch drivers/input/input.c < ../../kernel.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
@@ -102,7 +101,7 @@ jobs:
         clang -v
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        make -j$(nproc --all) O=out ARCH=${{ env.TARGET_ARCH }} CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CC=clang ${{ env.KERNEL_DEFCONFIG }}
+        make -j$(nproc --all) O=out ARCH=${{ env.TARGET_ARCH }} CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CC=clang ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.KERNEL_DEFCONFIG }}
         make -j$(nproc --all) O=out ARCH=${{ env.TARGET_ARCH }} CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CC=clang ${{ env.BUILD_EXTRA_COMMAND }}
 
     - name: Check a kernel output files
