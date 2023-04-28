@@ -51,6 +51,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        cd android-kernel
+        cp ../../Makefile ./
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
