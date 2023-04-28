@@ -39,7 +39,7 @@ jobs:
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --depth 1 https://gitlab.com/jjpprrrr/prelude-clang.git clang
+        git clone --depth 1 https://codeberg.org/Mandi-Sa/clang.git clang
         chmod -R +x clang
 
     - name: Download mkbootimg tools
@@ -83,6 +83,7 @@ jobs:
             sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
             echo "CONFIG_LTO_NONE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         fi
+        echo "KSU_COMPAT_USE_SELINUX_STATE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
         patch drivers/input/input.c < ../../kernel.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
