@@ -301,7 +301,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-ifneq ($(LLVM),)
+ifeq ($(cc-name),clang)
 HOSTCC       = clang
 HOSTCXX      = clang++
 else
@@ -350,7 +350,7 @@ include scripts/Kbuild.include
 # Make variables (CC, etc...)
 LDGOLD		= $(CROSS_COMPILE)ld.gold
 CPP		= $(CC) -E
-ifneq ($(LLVM),)
+ifeq ($(cc-name),clang)
 CC		= clang
 LD		= ld.lld
 AR		= llvm-ar
