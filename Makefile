@@ -688,8 +688,7 @@ KBUILD_CFLAGS	+= $(call cc-option,-fdata-sections,)
 endif
 
 ifdef CONFIG_LTO_CLANG
-lto-clang-flags := -flto=thin -fvisibility=hidden
-endif
+lto-clang-flags := -flto -fvisibility=hidden
 
 # Limit inlining across translation units to reduce binary size
 LD_FLAGS_LTO_CLANG := -mllvm -import-instr-limit=5
@@ -1245,7 +1244,9 @@ ifdef cfi-flags
   endif
 endif
 ifdef scs-flags
-  
+  ifeq ($(call cc-option, $(scs-flags)),)
+	@echo Cannot use CONFIG_SHADOW_CALL_STACK: $(scs-flags) not supported by compiler >&2 && exit 1
+  endif
 endif
 	@:
 
