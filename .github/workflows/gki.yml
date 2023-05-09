@@ -22,7 +22,7 @@ jobs:
           ls -a kernel-build-tools/linux-x86/share/avb/
 
     - name: Setup kernel source
-        run: |
+      run: |
           cd $GITHUB_WORKSPACE
           git clone https://gerrit.googlesource.com/git-repo
           mkdir android-kernel && cd android-kernel
@@ -30,7 +30,7 @@ jobs:
           ../git-repo/repo sync -j$(nproc --all)
 
     - name: Setup Drivers
-        run: |
+      run: |
           cd $GITHUB_WORKSPACE/android-kernel
           GKI_ROOT=$(pwd)
           ln -sf $GITHUB_WORKSPACE/KernelSU_Action/qaq $GKI_ROOT/common/drivers/qaq
@@ -44,7 +44,7 @@ jobs:
         run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
 
     - name: Build boot images
-        run: |
+      run: |
           export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
           export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
           export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
