@@ -39,11 +39,11 @@ jobs:
           cd $GKI_ROOT/common/ && git apply $GITHUB_WORKSPACE/gki.patch
           sed -i 's/-dirty//g' $GKI_ROOT/common/scripts/setlocalversion
 
-    - name: Build boot.img
+    - name: Build Image
       working-directory: android-kernel
       run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
 
-    - name: Build boot images
+    - name: Build bootimg
       run: |
           export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
           export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
