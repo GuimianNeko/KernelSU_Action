@@ -41,8 +41,7 @@ jobs:
 
     - name: Build Image
       working-directory: android-kernel
-      run: |
-          CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
 
     - name: Build bootimg
       run: |
@@ -52,8 +51,7 @@ jobs:
           export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
           export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
           cd $GITHUB_WORKSPACE/android-kernel
-          $MKBOOTIMG --header_version 4 --kernel out/Image --output boot.img
-	      $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key ../kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+          ../gki.sh
 
     - name: Upload To Telegram
       env:
