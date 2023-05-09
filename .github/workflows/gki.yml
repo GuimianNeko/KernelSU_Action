@@ -42,17 +42,13 @@ jobs:
 
     - name: Build Image
       working-directory: android-kernel
-      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh ls -a out
 
-    - name: Build bootimg
-      run: |
-          export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
-          export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
-          export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
-          export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
-          export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
-          cd $GITHUB_WORKSPACE/android-kernel
-          ../gki.sh
+    - name: Upload Output
+      uses: actions/upload-artifact@v3
+      with:
+        name: kernel-android13-5.10-2023-02
+        path: $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist/*
 
     - name: Upload To Telegram
       env:
@@ -60,5 +56,5 @@ jobs:
         bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
         chmod +x upload.sh
-        ./upload.sh $GITHUB_WORKSPACE/android-kernel/out/boot.img
+        ./upload.sh $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist/boot.img
           
