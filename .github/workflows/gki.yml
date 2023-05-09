@@ -33,10 +33,10 @@ jobs:
       run: |
           cd $GITHUB_WORKSPACE/android-kernel
           GKI_ROOT=$(pwd)
-          ln -sf $GITHUB_WORKSPACE/KernelSU_Action/qaq $GKI_ROOT/common/drivers/qaq
+          ln -sf $GITHUB_WORKSPACE/qaq $GKI_ROOT/common/drivers/qaq
           DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
           echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
-          cd $GKI_ROOT/common/ && git apply $GITHUB_WORKSPACE/KernelSU_Action/gki.patch
+          cd $GKI_ROOT/common/ && git apply $GITHUB_WORKSPACE/gki.patch
           sed -i 's/-dirty//g' $GKI_ROOT/common/scripts/setlocalversion
 
     - name: Build boot.img
