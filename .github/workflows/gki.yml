@@ -52,7 +52,7 @@ jobs:
           export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
           export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
           cd $GITHUB_WORKSPACE/android-kernel
-          ls -a out
+          ls -a out/android13-5.10/dist
 
     - name: Upload Output
       uses: actions/upload-artifact@v3
