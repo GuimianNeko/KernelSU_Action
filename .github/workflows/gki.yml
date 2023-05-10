@@ -51,13 +51,16 @@ jobs:
           export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
           export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
           export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
-          cd $GITHUB_WORKSPACE/android-kernel
-          ls -a out/android13-5.10/dist
+          cd $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist
+          ls -a ./
+          git clone https://github.com/Kernel-SU/AnyKernel3
+          rm -rf ./AnyKernel3/.git
+          cp $OUTDIR/Image ./AnyKernel3/
 
     - name: Upload Output
       uses: actions/upload-artifact@v3
       with:
-        name: kernel-android13-5.10-2023-02
-        path: android-kernel/out/android13-5.10/dist/*
+        name: AnyKernel3-android13-5.10-2023-02
+        path: android-kernel/out/android13-5.10/dist/AnyKernel3/*
 
           
