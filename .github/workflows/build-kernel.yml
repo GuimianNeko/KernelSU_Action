@@ -52,14 +52,14 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
         cd android-kernel
-        ln -sf ../../qaq ./drivers/qaq
-        echo "obj-y += qaq/" >> ./drivers/Makefile
+        cp -R ../../qaq drivers
+        echo "obj-y += qaq/" >> drivers/Makefile
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        tar -xf ../boot-pe13-polaris.tar.gz
+        tar -xf ../boot-pissarro.tar.gz
         if [ -f boot-source.img ]; then
             echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
