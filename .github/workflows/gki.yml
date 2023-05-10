@@ -55,7 +55,7 @@ jobs:
           ls -a ./
           git clone https://github.com/Kernel-SU/AnyKernel3
           rm -rf ./AnyKernel3/.git
-          cp $OUTDIR/Image ./AnyKernel3/
+          cp Image ./AnyKernel3/
 
     - name: Upload Output
       uses: actions/upload-artifact@v3
