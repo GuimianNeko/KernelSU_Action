@@ -58,13 +58,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: kernel-android13-5.10-2023-02
-        path: $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist
+        path: android-kernel/out/android13-5.10/dist/*
 
-    - name: Upload To Telegram
-      env:
-        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
-        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      run: |
-        chmod +x upload.sh
-        ./upload.sh $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist/boot-img.tar.gz
           
