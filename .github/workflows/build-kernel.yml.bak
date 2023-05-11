@@ -32,8 +32,7 @@ jobs:
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "DEVICE=$(echo ${{ env.KERNEL_DEFCONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//')" >> $GITHUB_ENV
-        sudo apt-get update
-        sudo sudo apt-get install git-core git-lfs gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3
+        apt update && apt update -y && apt install -y git libssl-dev gcc-arm-linux-gnueabi build-essential libncurses5-dev bzip2 make gcc g++ grep bc curl bison flex openssl lzop ccache unzip zlib1g-dev ninja-build texinfo file ca-certificates ccache wget cmake texinfo ca-certificates zlib1g-dev xz-utils libelf-dev zip libgmp-dev xz-utils libncurses-dev g++ gawk m4 libtinfo5 cpio binutils-dev libelf-dev cmake ninja-build texinfo u-boot-tools
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
     - name: Download Clang
@@ -51,13 +50,16 @@ jobs:
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursiv ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        cd android-kernel
+        cp -R ../../qaq drivers
+        echo "obj-y += qaq/" >> drivers/Makefile
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        tar -xf ../boot-miui13.tar.gz
+        tar -xf ../boot-pissarro.tar.gz
         if [ -f boot-source.img ]; then
             echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
@@ -69,17 +71,10 @@ jobs:
       if: env.USE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        rm -rf KernelSU
-        git clone https://github.com/tiann/KernelSU
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
         if [ ${{ env.USE_KPROBES }} = true ]; then
             echo "CONFIG_KPROBES=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
             echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
-        else
-            if git apply --check ../../KernelSU.patch ; then
-                git apply ../../KernelSU.patch
-            else
-                echo "KernelSU Patching failed"
-            fi
         fi
         if [ ${{ env.USE_OVERLAYFS }} = true ]; then
             echo "CONFIG_OVERLAY_FS=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
@@ -90,8 +85,10 @@ jobs:
             sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
             echo "CONFIG_LTO_NONE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         fi
+        sed -i 's/CONFIG_SHADOW_CALL_STACK=y/CONFIG_SHADOW_CALL_STACK=n/' arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         echo "KSU_COMPAT_USE_SELINUX_STATE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
+        patch drivers/input/input.c < ../../kernel.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
