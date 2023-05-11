@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "process.h"
 
-#define DEVICE_NAME "zhouhaid"
+#define DEVICE_NAME "wanbai"
 
 int dispatch_open(struct inode *node, struct file *file)
 {
@@ -101,4 +101,4 @@ module_exit(driver_unload);
 
 MODULE_DESCRIPTION("Linux Kernel.");
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("zhouhaid");
+MODULE_AUTHOR("wanbai");
