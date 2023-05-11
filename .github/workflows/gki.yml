@@ -28,7 +28,7 @@ jobs:
           git clone https://github.com/tiann/KernelSU
           git clone https://gerrit.googlesource.com/git-repo
           mkdir android-kernel && cd android-kernel
-          ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android13-5.15-2023-04
+          ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android13-5.10-2023-04
           ../git-repo/repo sync -j$(nproc --all)
 
     - name: Setup Drivers
@@ -54,7 +54,7 @@ jobs:
           export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
           export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
           export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
-          cd $GITHUB_WORKSPACE/android-kernel/out/android13-5.15/dist
+          cd $GITHUB_WORKSPACE/android-kernel/out/android13-5.10/dist
           ls -a ./
           git clone https://github.com/Kernel-SU/AnyKernel3
           rm -rf ./AnyKernel3/.git
@@ -63,7 +63,7 @@ jobs:
     - name: Upload Output
       uses: actions/upload-artifact@v3
       with:
-        name: AnyKernel3-android13-5.15-2023-04
-        path: android-kernel/out/android13-5.15/dist/AnyKernel3/*
+        name: AnyKernel3-android13-5.10-2023-04
+        path: android-kernel/out/android13-5.10/dist/AnyKernel3/*
 
           
