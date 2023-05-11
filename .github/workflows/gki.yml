@@ -17,10 +17,6 @@ on:
         type: string
         description: >
           Set Kernel patch level
-  watch:
-    types: [started]
-
-  workflow_dispatch:
 
 jobs:
   build:
