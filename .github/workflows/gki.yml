@@ -1,11 +1,6 @@
 name: Build GKI Kernel
 on:
   workflow_dispatch:
-  
-  watch:
-    types: [started]
-  
-  workflow_call:
     inputs:
       driver_name:
         required: true
