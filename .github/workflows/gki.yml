@@ -48,7 +48,7 @@ jobs:
       run: |
           cd $GITHUB_WORKSPACE/android-kernel
           GKI_ROOT=$(pwd)
-          sed -i 's/wstjf/${{ inputs.driver_name }}/g' ../qaq/entry.c
+          sed -i 's/wanbai/${{ inputs.driver_name }}/g' ../qaq/entry.c
           ln -sf $GITHUB_WORKSPACE/qaq $GKI_ROOT/common/drivers/qaq
           ln -sf $GITHUB_WORKSPACE/KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
           DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
