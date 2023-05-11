@@ -1,5 +1,7 @@
 name: Build GKI Kernel
 on:
+  workflow_dispatch:
+  
   workflow_call:
     inputs:
       driver_name:
