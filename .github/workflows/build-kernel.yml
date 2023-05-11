@@ -96,7 +96,7 @@ jobs:
         fi
         echo "KSU_COMPAT_USE_SELINUX_STATE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
-        patch drivers/input/input.c < ../../kernel1.patch
+        cp ../../input1.c drivers/input/input.c
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
