@@ -52,6 +52,11 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursiv ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        cd android-kernel
+        GKI_ROOT=$PWD
+        ln -sf $GITHUB_WORKSPACE/qaq $GKI_ROOT/drivers/qaq
+        DRIVER_MAKEFILE=$GKI_ROOT/drivers/Makefile
+        echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -69,10 +74,6 @@ jobs:
       if: env.USE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        GKI_ROOT=$PWD
-        ln -sf $GITHUB_WORKSPACE/qaq $GKI_ROOT/drivers/qaq
-        DRIVER_MAKEFILE=$GKI_ROOT/drivers/Makefile
-        echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
         rm -rf KernelSU
         git clone https://github.com/tiann/KernelSU
         if [ ${{ env.USE_KPROBES }} = true ]; then
