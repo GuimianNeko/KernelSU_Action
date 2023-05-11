@@ -57,7 +57,7 @@ jobs:
       if: env.MAKE_BOOT_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        tar -xf ../boot-miui13.tar.gz
+        tar -xf ../boot-miui12.5-polaris.tar.gz
         if [ -f boot-source.img ]; then
             echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
@@ -96,7 +96,6 @@ jobs:
         fi
         echo "KSU_COMPAT_USE_SELINUX_STATE=y" >> arch/${{ env.TARGET_ARCH }}/configs/${{ env.KERNEL_DEFCONFIG }}
         patch KernelSU/kernel/selinux/selinux.c < ../../selinux.patch
-        patch drivers/input/input.c < ../../kernel.patch
         echo "UPLOADNAME=-KernelSU" >> $GITHUB_ENV
 
     - name: Build kernel
