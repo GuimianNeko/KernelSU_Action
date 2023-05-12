@@ -74,10 +74,6 @@ jobs:
           rm -rf ./AnyKernel3/.git
           mkdir bootdir
           $GITHUB_WORKSPACE/signboot.sh
-          cp boot.img ./bootdir/
-          cp boot1.img ./bootdir/
-          cp boot-gz.img ./bootdir/
-          cp boot-lz4.img ./bootdir/
           cp Image ./AnyKernel3/
     
     - name: Upload bootimg
