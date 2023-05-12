@@ -62,7 +62,7 @@ jobs:
       if: env.MAKE_BOOT_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        tar -xf ../boot-miui12.5-polaris.tar.gz
+        tar -xf ../boot-oneplus7pro.tar.gz
         if [ -f boot-source.img ]; then
             echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
