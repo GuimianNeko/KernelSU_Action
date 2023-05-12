@@ -62,6 +62,9 @@ jobs:
       run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
 
     - name: Build bootimg
+      env:
+        version: ${{ inputs.version_name }}
+        patchlevel: ${{ inputs.patch_level }}
       run: |
           export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
           export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
