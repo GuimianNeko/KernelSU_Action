@@ -1,4 +1,5 @@
-if [[ "$${{ inputs.version_name }}" == *"android12"* ]]; then
+version=${{ inputs.version_name }}
+if [[ "$$version" == *"android12"* ]]; then
     echo '[+] Download prebuilt ramdisk'
 	curl -Lo gki-kernel.zip https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-"${{ inputs.patch_level }}"_r1.zip
 	unzip gki-kernel.zip && rm gki-kernel.zip
