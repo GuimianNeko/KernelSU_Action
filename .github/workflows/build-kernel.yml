@@ -60,6 +60,7 @@ jobs:
         cd KernelSU
         git pull && cd ../
         rm -rf drivers/kernelsu && ln -sf $GITHUB_WORKSPACE/KernelSU/kernel $GKI_ROOT/drivers/kernelsu
+        ls drivers/kernelsu && cat drivers/kernelsu/Makefile
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
