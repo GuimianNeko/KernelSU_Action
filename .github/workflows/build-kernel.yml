@@ -42,8 +42,8 @@ jobs:
         wget -O glibc.tar.gz http://ftp.gnu.org/gnu/glibc/glibc-2.37.tar.gz
         tar -xf glibc.tar.gz && cd glibc-2.37 && chmod -R +x ./
         mkdir build && cd build
-        ../configure --prefix=/usr --disable-sanity-checks
-        make -j$(nproc --all) && sudo make install
+        sudo ../configure --prefix=/usr --disable-sanity-checks
+        sudo make -j$(nproc --all) && sudo make install
     
     - name: Download Clang
       run: |
