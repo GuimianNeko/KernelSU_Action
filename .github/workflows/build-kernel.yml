@@ -39,8 +39,9 @@ jobs:
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone -b amd64-kernel-arm --depth 1 https://codeberg.org/Mandi-Sa/clang.git clang
-        chmod -R +x clang
+        mkdir clang && cd clang
+        curl -LO https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman
+        ./antman -S
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
