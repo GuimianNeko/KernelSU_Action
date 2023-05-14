@@ -43,7 +43,7 @@ jobs:
         tar -xf glibc.tar.gz && cd glibc-2.37 && chmod -R +x ./
         mkdir build && cd build
         sudo ../configure --prefix=/usr/local --disable-sanity-checks
-        make -j4 && make install
+        sudo make -j4 && sudo make install
     
     - name: Download Clang
       run: |
