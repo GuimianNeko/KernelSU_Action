@@ -40,7 +40,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang && cd clang
-        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S --patch=glibc
+        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") --patch=glibc
+        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
