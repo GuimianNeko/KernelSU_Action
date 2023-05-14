@@ -41,7 +41,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang && cd clang
         curl -LO https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman
-        ./antman -S
+        chmod +x antman && ./antman -S
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
