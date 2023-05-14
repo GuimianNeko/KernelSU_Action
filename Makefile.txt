@@ -418,8 +418,8 @@ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 # Make variables (CC, etc...)
 CPP		= $(CC) -E
 REAL_CC	= $(CCACHE) $(CROSS_COMPILE)clang
-LD		= ld.lld
-AR		= llvm-ar
+LD		= $(CROSS_COMPILE)ld.lld
+AR		= $(CROSS_COMPILE)llvm-ar
 NM		= llvm-nm
 OBJCOPY		= $(CROSS_COMPILE)llvm-objcopy
 OBJDUMP		= $(CROSS_COMPILE)llvm-objdump
@@ -685,7 +685,7 @@ export RETPOLINE_VDSO_CFLAGS
 ifdef CONFIG_LTO_CLANG
 # LTO produces LLVM IR instead of object files. Use llvm-ar and llvm-nm, so we
 # can process these.
-AR		:= llvm-ar
+AR		:= $(CROSS_COMPILE)llvm-ar
 LLVM_NM		:= llvm-nm
 export LLVM_NM
 endif
