@@ -1,10 +1,10 @@
-name: Build ACK 5.4 with KSU
+name: Build ACK 5.10 with KSU
 on:
   workflow_dispatch:
     inputs:
       TAG:
         required: true
-        default: "android12-5.4"
+        default: "android12-5.10-2021-11"
 
 jobs:
   build:
@@ -26,7 +26,8 @@ jobs:
         git clone https://github.com/tiann/KernelSU.git
         git clone https://gerrit.googlesource.com/git-repo
         mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b ${{ github.event.inputs.TAG }}
+        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android12-5.10-2023-02
+        cp $GITHUB_WORKSPACE/default.xml .repo/manifests/default.xml
         ../git-repo/repo sync -j$(nproc --all)
         echo "[+] KernelSU setup"
         GKI_ROOT=$(pwd)
