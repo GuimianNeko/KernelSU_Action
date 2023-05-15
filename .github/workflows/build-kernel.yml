@@ -36,20 +36,12 @@ jobs:
         sudo sudo apt-get install git-core git-lfs libarchive-tools gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python2 ccache
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
-    - name: Build Glibc
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        wget -O glibc.tar.gz http://ftp.gnu.org/gnu/glibc/glibc-2.37.tar.gz
-        tar -xf glibc.tar.gz && cd glibc-2.37 && chmod -R +x ./
-        mkdir build && cd build
-        sudo ../configure --prefix=/usr --disable-sanity-checks
-        sudo make -j4 && sudo make install
-    
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang && cd clang
         bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S
+        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") --patch=glibc
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
