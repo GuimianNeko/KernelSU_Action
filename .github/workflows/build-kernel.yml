@@ -39,7 +39,7 @@ jobs:
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone -b amd64-kernel-arm --depth 1 https://gitlab.com/jjpprrrr/prelude-clang clang
+        git clone --depth 1 https://gitlab.com/jjpprrrr/prelude-clang clang
         chmod -R +x clang
 
     - name: Download mkbootimg tools
