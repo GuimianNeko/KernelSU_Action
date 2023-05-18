@@ -54,6 +54,7 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
+        sed -i 's/extern in_long_press/extern int in_long_press/g' arch/arm64/kernel/smp.c
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
