@@ -12,9 +12,8 @@
 #include <asm/pgtable.h>
 
 extern struct mm_struct *get_task_mm(struct task_struct *task);
-
-#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 61))
 extern void mmput(struct mm_struct *);
+#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 61))
 
 phys_addr_t translate_linear_address(struct mm_struct* mm, uintptr_t va) {
 
