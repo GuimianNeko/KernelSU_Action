@@ -59,7 +59,7 @@ jobs:
         sed -i 's/rmnet_perf_free_hash_table()/rmnet_perf_free_hash_table(void)/g' techpack/data/drivers/rmnet/perf/rmnet_perf_opt.c
         sed -i 's/get_xiaomi_touch_class()/get_xiaomi_touch_class(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
         sed -i 's/get_xiaomi_touch_dev()/get_xiaomi_touch_dev(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
-        
+        sed -i 's/mdie[SIR_MDIE_SIZE]/mdie[]/g' drivers/staging/qcacld-3.0/core/mac/src/sys/legacy/src/utils/src/parser_api.c
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
