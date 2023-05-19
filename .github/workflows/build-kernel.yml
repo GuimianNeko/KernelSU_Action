@@ -55,6 +55,11 @@ jobs:
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
         sed -i 's/extern in_long_press/extern int in_long_press/g' arch/arm64/kernel/smp.c
+        sed -i 's/static hdl_count/static int hdl_count/g' techpack/camera/drivers/cam_req_mgr/cam_req_mgr_util.c
+        sed -i 's/rmnet_perf_free_hash_table()/rmnet_perf_free_hash_table(void)/g' techpack/data/drivers/rmnet/perf/rmnet_perf_opt.c
+        sed -i 's/get_xiaomi_touch_class()/get_xiaomi_touch_class(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
+        sed -i 's/get_xiaomi_touch_dev()/get_xiaomi_touch_dev(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
+        
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
