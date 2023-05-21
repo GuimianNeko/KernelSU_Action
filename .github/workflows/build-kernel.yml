@@ -38,7 +38,7 @@ jobs:
     - name: Download Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone -b amd64-kernel-arm --depth 1 https://codeberg.org/Mandi-Sa/clang.git clang
+        git clone --depth 1 https://gitlab.com/jjpprrrr/prelude-clang clang
         chmod -R +x clang
 
     - name: Download mkbootimg tools
@@ -54,12 +54,6 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
-        sed -i 's/extern in_long_press/extern int in_long_press/g' arch/arm64/kernel/smp.c
-        sed -i 's/static hdl_count/static int hdl_count/g' techpack/camera/drivers/cam_req_mgr/cam_req_mgr_util.c
-        sed -i 's/rmnet_perf_free_hash_table()/rmnet_perf_free_hash_table(void)/g' techpack/data/drivers/rmnet/perf/rmnet_perf_opt.c
-        sed -i 's/get_xiaomi_touch_class()/get_xiaomi_touch_class(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
-        sed -i 's/get_xiaomi_touch_dev()/get_xiaomi_touch_dev(void)/g' drivers/input/touchscreen/xiaomi/xiaomi_touch.c
-        sed -i 's/mdie[SIR_MDIE_SIZE]/mdie[]/g' drivers/staging/qcacld-3.0/core/mac/src/sys/legacy/src/utils/src/parser_api.c
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
