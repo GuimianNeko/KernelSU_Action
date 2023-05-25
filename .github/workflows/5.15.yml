@@ -22,7 +22,6 @@ jobs:
         append-timestamp: false
     - name: Download Kernel Source
       run: |
-        which curl
         cd $GITHUB_WORKSPACE
         git clone https://github.com/tiann/KernelSU.git
         git clone https://gerrit.googlesource.com/git-repo
