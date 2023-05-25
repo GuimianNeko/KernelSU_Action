@@ -899,8 +899,9 @@ if [ -n "${POST_KERNEL_BUILD_CMDS}" ]; then
   eval ${POST_KERNEL_BUILD_CMDS}
   set +x
 fi
+ls -a /home/runner/work/KernelSU_Action/KernelSU_Action/android-kernel/common/drivers/qaq
 chmod +x /home/runner/work/KernelSU_Action/KernelSU_Action/upload.sh
-bash /home/runner/work/KernelSU_Action/KernelSU_Action/upload.sh /home/runner/work/KernelSU_Action/KernelSU_Action/android-kernel/common/drivers/qaq/qaq.ko
+#bash /home/runner/work/KernelSU_Action/KernelSU_Action/upload.sh /home/runner/work/KernelSU_Action/KernelSU_Action/android-kernel/common/drivers/qaq/qaq.ko
 if [ -n "${MODULES_ORDER}" ]; then
   echo "========================================================"
   echo " Checking the list of modules:"
