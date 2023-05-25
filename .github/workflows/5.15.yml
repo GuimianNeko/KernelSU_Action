@@ -46,6 +46,8 @@ jobs:
       run: CCACHE="/usr/bin/ccache" BUILD_BOOT_IMG=1 SKIP_VENDOR_BOOT=1 KERNEL_BINARY=Image AVB_SIGN_BOOT_IMG=1 AVB_BOOT_PARTITION_SIZE=$((64*1024*1024)) AVB_BOOT_ALGORITHM=SHA256_RSA2048 AVB_BOOT_KEY=prebuilts/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem BOOT_IMAGE_HEADER_VERSION=4 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 OUT_DIR=common/out EXT_MODULES=drivers/qaq EXT_MODULES_MAKEFILE=drivers/qaq/Makefile build/build.sh
     - name: Prepare artifacts
       run: |
+        ls android-kernel/common/out/drivers/qaq
+        ls android-kernel/common/drivers/qaq
         OUTDIR=android-kernel/out/*/dist/
         mkdir output
         cp $OUTDIR/Image ./output/
