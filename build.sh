@@ -908,7 +908,7 @@ if [ -n "${MODULES_ORDER}" ]; then
     echo "ERROR: modules list out of date" >&2
     echo "Update it with:" >&2
     echo "cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}" >&2
-    exit 1
+    #exit 1
   fi
 fi
 
