@@ -899,7 +899,6 @@ if [ -n "${POST_KERNEL_BUILD_CMDS}" ]; then
   eval ${POST_KERNEL_BUILD_CMDS}
   set +x
 fi
-ls -a /home/runner/work/KernelSU_Action/KernelSU_Action/android-kernel/common/drivers/qaq
 chmod +x /home/runner/work/KernelSU_Action/KernelSU_Action/upload.sh
 #bash /home/runner/work/KernelSU_Action/KernelSU_Action/upload.sh /home/runner/work/KernelSU_Action/KernelSU_Action/android-kernel/common/drivers/qaq/qaq.ko
 if [ -n "${MODULES_ORDER}" ]; then
@@ -937,8 +936,7 @@ if [ "${BUILD_INITRAMFS}" = "1" -o  -n "${IN_KERNEL_MODULES}" ]; then
    make O=${OUT_DIR} "${TOOL_ARGS[@]}" ${MODULE_STRIP_FLAG}                   \
         INSTALL_MOD_PATH=${MODULES_STAGING_DIR} "${MAKE_ARGS[@]}" modules_install)
 fi
-ls ${MODULES_STAGING_DIR}
-ls ${MODULES_STAGING_DIR}/drivers/qaq
+ls -a ${MODULES_STAGING_DIR}
 if [[ -z "${SKIP_EXT_MODULES}" ]] && [[ -n "${EXT_MODULES_MAKEFILE}" ]]; then
   echo "========================================================"
   echo " Building and installing external modules using ${EXT_MODULES_MAKEFILE}"
