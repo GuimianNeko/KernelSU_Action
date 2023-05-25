@@ -936,7 +936,7 @@ if [ "${BUILD_INITRAMFS}" = "1" -o  -n "${IN_KERNEL_MODULES}" ]; then
    make O=${OUT_DIR} "${TOOL_ARGS[@]}" ${MODULE_STRIP_FLAG}                   \
         INSTALL_MOD_PATH=${MODULES_STAGING_DIR} "${MAKE_ARGS[@]}" modules_install)
 fi
-ls -a ${MODULES_STAGING_DIR}
+ls -a ${MODULES_STAGING_DIR}/lib/modules
 if [[ -z "${SKIP_EXT_MODULES}" ]] && [[ -n "${EXT_MODULES_MAKEFILE}" ]]; then
   echo "========================================================"
   echo " Building and installing external modules using ${EXT_MODULES_MAKEFILE}"
