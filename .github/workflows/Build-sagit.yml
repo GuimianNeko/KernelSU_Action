@@ -102,6 +102,10 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
+        rm -rf KernelSU
+        rm -rf drivers/kernelsu
+        git clone --depth 1 https://github.com/tiann/KernelSU
+        ln -sf KernelSU/kernel drivers/kernelsu
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -212,7 +216,7 @@ jobs:
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v3
       with:
-        name: oneplus${{ env.UPLOADNAME }}-${{ env.BUILD_TIME }}
+        name: sagit${{ env.UPLOADNAME }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
     - name: Upload DTBO image
