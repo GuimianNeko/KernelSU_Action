@@ -1,0 +1,57 @@
+name: Build Test KO
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        required: true
+      branch:
+        required: true
+      defconfig:
+        required: true
+      name:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download Kernel Source
+      run: |
+        git clone --depth 1 https://gitlab.com/jjpprrrr/prelude-clang clang
+        git clone --depth 1 -b ${{ github.event.inputs.branch }} ${{ github.event.inputs.url }} android-kernel
+        cd android-kernel
+        GKI_ROOT=$(pwd)
+        echo "[+] GKI_ROOT: $GKI_ROOT"
+        echo "[+] Copy driver to $GKI_ROOT/drivers"
+        cp -r $GITHUB_WORKSPACE/qaq $GKI_ROOT/drivers/qaq
+        echo "[+] Add driver to Makefile"
+        DRIVER_MAKEFILE=$GKI_ROOT/drivers/Makefile
+        echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
+        mv $GKI_ROOT/drivers/qaq/Makefile.bak $GKI_ROOT/drivers/qaq/Makefile
+        mv $GKI_ROOT/drivers/qaq/memory.c.bak $GKI_ROOT/drivers/qaq/memory.c
+        echo "[+] drivers setup Done."
+        echo "[+] Setup defconfig."
+        defconfig=$GKI_ROOT/arch/arm64/configs/${{ github.event.inputs.defconfig }}
+        echo "CONFIG_MODULES=y" >> $defconfig
+        echo "CONFIG_MODULE_UNLOAD=y" >> $defconfig
+        echo "CONFIG_MODVERSIONS=y" >> $defconfig
+        cd -
+    - name: Build ko
+      run: |
+        export PATH=clang/bin:$PATH
+        clang -v
+        cd android-kernel
+        export KBUILD_BUILD_HOST=ubuntu22.04
+        export KBUILD_BUILD_USER=wstjf
+        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LD=ld.lld LLVM_IAS=1 ${{ github.event.inputs.defconfig }}
+        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LD=ld.lld LLVM_IAS=1 modules_prepare
+        cd drivers/qaq && make && ls
+        mv qaq.ko ${{ github.event.inputs.name }}
+    - name: Upload To Telegram
+      env:
+        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
+        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      run: |
+        chmod +x upload.sh
+        ./upload.sh android-kernel/drivers/qaq/${{ github.event.inputs.name }}
