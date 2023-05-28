@@ -36,6 +36,8 @@ jobs:
         echo "CONFIG_MODULES=y" >> $defconfig
         echo "CONFIG_MODULE_UNLOAD=y" >> $defconfig
         echo "CONFIG_MODVERSIONS=y" >> $defconfig
+        sed -i 's/CONFIG_SHADOW_CALL_STACK=y/CONFIG_SHADOW_CALL_STACK=n/' $defconfig
+        sed -i 's/CONFIG_CC_STACKPROTECTOR_STRONG=y/CONFIG_CC_STACKPROTECTOR_STRONG=n/' $defconfig
         cd -
     - name: Build ko
       run: |
@@ -44,8 +46,8 @@ jobs:
         cd android-kernel
         export KBUILD_BUILD_HOST=ubuntu22.04
         export KBUILD_BUILD_USER=wstjf
-        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LD=ld.lld LLVM_IAS=1 ${{ github.event.inputs.defconfig }}
-        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LD=ld.lld LLVM_IAS=1 modules_prepare
+        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LLVM_IAS=1 ${{ github.event.inputs.defconfig }}
+        make -j$(nproc --all) O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LLVM_IAS=1 modules_prepare
         cd drivers/qaq && make && ls
         mv qaq.ko ${{ github.event.inputs.name }}
     - name: Upload To Telegram
