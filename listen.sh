@@ -6,6 +6,7 @@ while true; do
         if [ -e "$dir/qaq.ko" ]; then
             cp $dir/qaq.ko $dir/$ktag.ko
             $GITHUB_WORKSPACE/upload.sh $dir/$ktag.ko
+            exit 0
         fi
     done
     sleep 1
