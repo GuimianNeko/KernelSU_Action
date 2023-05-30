@@ -23,7 +23,7 @@ jobs:
     - name: Download Kernel Source
       run: |
         cd $GITHUB_WORKSPACE
-        git clone https://github.com/tiann/KernelSU.git
+        git clone -b v0.5.5 https://github.com/tiann/KernelSU.git
         git clone https://gerrit.googlesource.com/git-repo
         mkdir android-kernel && cd android-kernel
         ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ github.event.inputs.TAG }}
