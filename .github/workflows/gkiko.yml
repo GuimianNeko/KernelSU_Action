@@ -21,10 +21,7 @@ jobs:
         key: ${{ github.event.inputs.TAG }}
         append-timestamp: false
     - name: Download Kernel Source
-      env:
-        ktag: ${{ github.event.inputs.TAG }}
       run: |
-        $GITHUB_WORKSPACE/listen.sh & echo 666
         cd $GITHUB_WORKSPACE
         git clone https://gerrit.googlesource.com/git-repo
         mkdir android-kernel && cd android-kernel
@@ -44,7 +41,11 @@ jobs:
         cd -
     - name: Build Boot
       working-directory: android-kernel
-      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      env:
+        ktag: ${{ github.event.inputs.TAG }}
+      run: |
+        $GITHUB_WORKSPACE/listen.sh & echo 666
+        CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
     - name: Upload To Telegram
       env:
         chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
