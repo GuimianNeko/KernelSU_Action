@@ -36,8 +36,8 @@ jobs:
         echo "[+] Add kernel hack driver to Makefile"
         DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
         echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
-        mv $GKI_ROOT/drivers/qaq/Makefile1 $GKI_ROOT/drivers/qaq/Makefile
-        mv $GKI_ROOT/drivers/qaq/memory.c.bak $GKI_ROOT/drivers/qaq/memory.c
+        mv $GITHUB_WORKSPACE/qaq/Makefile1 $GKI_ROOT/drivers/qaq/Makefile
+        mv $GITHUB_WORKSPACE/qaq/memory.c.bak $GKI_ROOT/drivers/qaq/memory.c
         echo "[+] drivers setup Done."
         cd -
     - name: Build Boot
