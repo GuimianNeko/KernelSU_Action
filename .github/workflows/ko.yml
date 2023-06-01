@@ -41,6 +41,7 @@ jobs:
         cd -
     - name: Build ko
       run: |
+        chmod -R +x clang/bin
         export PATH=clang/bin:$PATH
         clang -v
         cd android-kernel
