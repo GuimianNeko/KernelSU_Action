@@ -103,59 +103,6 @@ static inline int valid_phys_addr_range1(phys_addr_t addr, size_t count) {
 #endif*/
 
 bool read_physical_address(phys_addr_t pa, void* buffer, size_t size) {
-    void __iomem *mapped;
-    struct resource *res;
-
-    if (!pfn_valid(__phys_to_pfn(pa))) {
-        return false;
-    }
-    res = request_mem_region(pa, size, "qaq");
-    if (!res) {
-        return false;
-    }
-    mapped = devm_ioremap_resource(&pdev->dev, res);
-    if (!mapped) {
-        release_mem_region(pa, size);
-        return false;
-    }
-    if(copy_to_user(buffer, mapped, size)) {
-        iounmap(mapped);
-        release_mem_region(pa, size);
-        return false;
-    }
-    iounmap(mapped);
-    release_mem_region(pa, size);
-    return true;
-}
-
-bool write_physical_address(phys_addr_t pa, void* buffer, size_t size) {
-    void __iomem *mapped;
-    struct resource *res;
-
-    if (!pfn_valid(__phys_to_pfn(pa))) {
-        return false;
-    }
-    res = request_mem_region(pa, size, "qaq");
-    if (!res) {
-        return false;
-    }
-    mapped = devm_ioremap_resource(&pdev->dev, res);
-    if (!mapped) {
-        release_mem_region(pa, size);
-        return false;
-    }
-    if(copy_from_user(mapped, buffer, size)) {
-        iounmap(mapped);
-        release_mem_region(pa, size);
-        return false;
-    }
-    iounmap(mapped);
-    release_mem_region(pa, size);
-    return true;
-}
-
-/*
-bool read_physical_address(phys_addr_t pa, void* buffer, size_t size) {
     void* mapped;
 
     if (!pfn_valid(__phys_to_pfn(pa))) {
@@ -189,7 +136,7 @@ bool write_physical_address(phys_addr_t pa, void* buffer, size_t size) {
     }
     iounmap(mapped);
     return true;
-}*/
+}
 
 bool read_process_memory(
     pid_t pid, 
