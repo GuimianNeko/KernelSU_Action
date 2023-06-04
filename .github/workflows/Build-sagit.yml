@@ -102,6 +102,7 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
+        echo "extern YYLTYPE yylloc;" >> scripts/dtc/dtc-lexer.l
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
