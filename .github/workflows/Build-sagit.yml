@@ -106,6 +106,8 @@ jobs:
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
         sed -i 's/inline meminfo_show/inline int meminfo_show/g' drivers/block/zram/hybridswap/hybridswap_eswap.c
+        sed -i 's/static void gf_auto_send_touchdown()/static void gf_auto_send_touchdown(void)/g' drivers/input/oplus_fp_drivers/goodix_optical_fp/gf_spi.c
+        sed -i 's/static void gf_auto_send_touchup()/static void gf_auto_send_touchup(void)/g' drivers/input/oplus_fp_drivers/goodix_optical_fp/gf_spi.c
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
