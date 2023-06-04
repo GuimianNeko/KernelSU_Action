@@ -105,7 +105,7 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
-        sed -i 'inline meminfo_show/int meminfo_show/g' drivers/block/zram/hybridswap/hybridswap_eswap.c
+        sed -i 's/inline meminfo_show/inline int meminfo_show/g' drivers/block/zram/hybridswap/hybridswap_eswap.c
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
