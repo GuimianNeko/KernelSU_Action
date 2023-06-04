@@ -44,7 +44,7 @@ jobs:
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "DEVICE=$(echo ${{ env.KERNEL_DEFCONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//')" >> $GITHUB_ENV
         sudo apt-get update
-        sudo apt-get install git gcc-9 ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
+        sudo apt-get install git gcc-9 g++-9 ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
     - name: Download Clang-aosp
@@ -59,7 +59,35 @@ jobs:
       if: env.USE_CUSTOM_CLANG == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --depth 1 -b amd64-kernel-arm https://gitea.com/Mandi-Sa/clang clang-aosp
+        if [[ ${{ env.CUSTOM_CLANG }} =~ git ]]; then
+          if [[ ${{ env.CUSTOM_CLANG }} == *'.tar.gz' ]]; then
+            wget -O clang.tar.gz ${{ env.CUSTOM_CLANG }}
+            mkdir clang-aosp
+            tar -C clang-aosp/ -zxvf clang.tar.gz
+          else
+            git clone ${{ env.CUSTOM_CLANG }} -b ${{ env.CUSTOM_CLANG_BRANCH }} clang-aosp --depth=1
+          fi   
+        else
+          wget -O clang.zip ${{ env.CUSTOM_CLANG }}
+          mkdir clang-aosp
+          unzip clang.zip -d clang-aosp/
+        fi
+    
+    - name: Download Gcc-aosp
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        if [ ${{ env.USE_GCC_ARM64 }} = true ]; then
+            mkdir gcc-64
+            wget -O gcc-aarch64.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz
+            tar -C gcc-64/ -zxvf gcc-aarch64.tar.gz
+            echo "GCC_64=CROSS_COMPILE=$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin/aarch64-linux-android-" >> $GITHUB_ENV
+        fi
+        if [ ${{ env.USE_GCC_ARM32 }} = true ]; then
+            mkdir gcc-32
+            wget -O gcc-arm.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz
+            tar -C gcc-32/ -zxvf gcc-arm.tar.gz
+            echo "GCC_32=CROSS_COMPILE_ARM32=$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin/arm-linux-androideabi-" >> $GITHUB_ENV
+        fi        
         
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -120,11 +148,13 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        clang -v
+        gcc --version
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_DEFCONFIG }}
         if [ ${{ env.USE_CCACHE }} = true ]; then
-            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
         else
-            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
         fi
         
     - name: Check a kernel output files
