@@ -59,19 +59,7 @@ jobs:
       if: env.USE_CUSTOM_CLANG == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        if [[ ${{ env.CUSTOM_CLANG }} =~ git ]]; then
-          if [[ ${{ env.CUSTOM_CLANG }} == *'.tar.gz' ]]; then
-            wget -O clang.tar.gz ${{ env.CUSTOM_CLANG }}
-            mkdir clang-aosp
-            tar -C clang-aosp/ -zxvf clang.tar.gz
-          else
-            git clone ${{ env.CUSTOM_CLANG }} -b ${{ env.CUSTOM_CLANG_BRANCH }} clang-aosp --depth=1
-          fi   
-        else
-          wget -O clang.zip ${{ env.CUSTOM_CLANG }}
-          mkdir clang-aosp
-          unzip clang.zip -d clang-aosp/
-        fi
+        git clone --depth 1 -b amd64-kernel-arm https://gitea.com/Mandi-Sa/clang clang-aosp
         
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -86,7 +74,6 @@ jobs:
         cd android-kernel
         cp -R ../../qaq drivers
         echo "obj-y += qaq/" >> drivers/Makefile
-        echo "extern YYLTYPE yylloc;" >> scripts/dtc/dtc-lexer.l
 
     - name: Download source boot image
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -135,9 +122,9 @@ jobs:
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_DEFCONFIG }}
         if [ ${{ env.USE_CCACHE }} = true ]; then
-            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         else
-            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} ${{ env.BUILD_EXTRA_COMMAND }} CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         fi
         
     - name: Check a kernel output files
