@@ -4,11 +4,9 @@
 
 // #define CFI_NEW_KERNEL
 
-#ifdef CFI_NEW_KERNEL
 #define probe_kernel_read copy_from_kernel_nofault
 #define pgd_offset_raw pgd_offset_pgd
 #define mmap_sem mmap_lock
-#endif
 
 
 // #define CONFIG_DEBUG_PRINTK
