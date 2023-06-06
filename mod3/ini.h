@@ -2,6 +2,7 @@
 #define CONFIG_INI
 
 
+#define MAX_THREAD 3
 // #define CFI_NEW_KERNEL
 
 #define probe_kernel_read copy_from_kernel_nofault
@@ -10,7 +11,7 @@
 
 
 // #define CONFIG_DEBUG_PRINTK
-#define DEV_FILENAME "mrw2" //当前驱动DEV文件名
+#define DEV_FILENAME "Reverse" //当前驱动DEV文件名
 
 #include "fixFork.h"
 
@@ -83,66 +84,46 @@
 
 
 
-static struct proc_dir_entry *proc_root;
-static struct proc_dir_entry * rootit;
-static struct cred *cred_back;
-static struct task_struct *task;
-// static unsigned long vaddr;//虚拟地址
-// static unsigned long paddr;//物理地址
-static uint64_t page_addr;//页地址
-
-
-
 #define 转化内存 '\x01'
 #define 指定进程 '\x02'
 #define 读取内存 '\x03'
 #define 写入内存 '\x04'
 #define 获取基址 '\x05'
 #define 获取cmdline地址 '\x06'
-#define 目标地址 映射区->地址
-#define 用户指令 映射区->指令
-#define 目标pid 映射区->地址
-#define 写入内容 映射区->内容
-#define 密码 映射区->内容
-#define 返回值 映射区->返回信息
+#define 目标地址 映射区->数据体[线程标号].地址
+#define 用户指令 映射区->数据体[线程标号].指令
+#define 目标pid 映射区->数据体[线程标号].地址
+#define 写入内容 映射区->数据体[线程标号].内容
+#define 密码 映射区->数据体[线程标号].内容
+#define 返回值 映射区->数据体[线程标号].返回信息
 
 #define 成功 '\x11'
 #define 失败 '\x10'
 
 #define 判断(x); if(x>0){返回值=成功;}else{返回值=失败; return -1;}
 
-//#pragma pack(1)
-struct 桥梁
+
+typedef struct
 {
 	char 指令;
 	char 返回信息;
-	char 调试字;
+	size_t 大小;
 	uint64_t 地址;
-	char 内容[16];
+	char 内容[512];
+}DAT;
+
+struct 桥梁
+{
+	DAT 数据体[MAX_THREAD];
 };
-
-
-struct cdev 设备结构体;
-struct class *设备类; //创建的设备类
-int 动态设备号 = 0;
-dev_t g_rwProcMem_devno;
 
 
 
 static struct 桥梁 *映射区;
 
-// struct mm_struct * tag_mm = NULL;
-pgd_t * tag_pgd = NULL;
-struct task_struct* tag_task;
-struct pid * proc_pid_struct;
+pgd_t *tag_pgd = NULL;
 
 
-
-
-
-
-
-pte_t* pte =NULL;
 #ifdef CONFIG_DEBUG_PRINTK
 #define printk_debug printk
 #else

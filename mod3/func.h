@@ -3,7 +3,6 @@
 
 #include "ini.h"
 
-static size_t g_phy_total_memory_size = 0; // 物理内存总大小
 
 #define MAX_MAPINDEX 7000
 
@@ -115,11 +114,13 @@ struct MapTable
 
 static int 虚拟地址转物理地址(char * ppa , uint64_t va , pgd_t * pgd)
 {
+	uint64_t page_addr;
 	uint64_t page_offset2;
 	pgd_t *pgd_tmp = NULL;
 	p4d_t *p4d_tmp = NULL;
 	pud_t *pud_tmp = NULL;
 	pmd_t *pmd_tmp = NULL;
+	pte_t *pte_tmp = NULL;
     
     int retval=-1;
 	
@@ -149,12 +150,12 @@ static int 虚拟地址转物理地址(char * ppa , uint64_t va , pgd_t * pgd)
 	
 	
 	
-	pte = pte_offset_kernel(pmd_tmp,va);
-	if(pte_none(*pte))
+	pte_tmp = pte_offset_kernel(pmd_tmp,va);
+	if(pte_none(*pte_tmp))
 	{
 		goto out;
 	}
-	if(!pte_present(*pte))
+	if(!pte_present(*pte_tmp))
 	{
 		goto out;
 	}
@@ -162,7 +163,7 @@ static int 虚拟地址转物理地址(char * ppa , uint64_t va , pgd_t * pgd)
 	
 	
 	//下为页物理地址
-	page_addr = (uint64_t)(pte_pfn(*pte) << PAGE_SHIFT);
+	page_addr = (uint64_t)(pte_pfn(*pte_tmp) << PAGE_SHIFT);
 	//下为页偏移
 	
 	page_offset2= va & (PAGE_SIZE-1);
@@ -185,6 +186,9 @@ static inline unsigned long size_inside_page(unsigned long start,
 	return min(sz, size);
 }
 
+
+char tmp[512];
+
 static int 读取物理内存(void* 输出 , uint64_t phy_addr , size_t 大小)
 {
 	int probe=1;
@@ -193,14 +197,16 @@ static int 读取物理内存(void* 输出 , uint64_t phy_addr , size_t 大小)
 	size_t sz = size_inside_page(phy_addr, 大小);
 	char *ptr = xlate_dev_mem_ptr(phy_addr);
 	
-	
-	probe = probe_kernel_read(输出, ptr, sz);
+
+
+	probe = probe_kernel_read(tmp, ptr, sz);
 	
 	if(probe)
 	{
 		goto out;
 	}
 	
+	memcpy(输出 , tmp , sz);
 	unxlate_dev_mem_ptr(phy_addr, ptr);
 	retval=1;
 out:
