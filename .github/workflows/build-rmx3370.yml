@@ -23,15 +23,19 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
-    - name: Download Proton-Clang
+    - name: Download Neutron-Clang
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone https://github.com/kdrag0n/proton-clang clang --depth=1
+        mkdir clang && cd clang
+        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S=16012023
+        bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") --patch=glibc
         
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone https://github.com/Blackmanx/kernel_realme_sm8250 -b bigshot android-kernel --depth=1
+        git clone https://github.com/Andrea055/android_kernel_realme_sm8250 -b rui-dragon4.2 android-kernel --depth=1
+        cd android-kernel
+        git clone https://github.com/josenk/srandom --depth=1
 
     - name: Setup Configuration for Kernel
       run: |
@@ -49,27 +53,27 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang/bin:$PATH
-        make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC=clang O=out ARCH=arm64 vendor/sm8250_defconfig
-        make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" O=out ARCH=arm64
-
-    - name: Make Anykernel3
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone https://github.com/osm0sis/AnyKernel3
-        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-        sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
-        sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
-        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
-        rm -rf AnyKernel3/.git* AnyKernel3/README.md
+        make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC=clang O=out ARCH=arm64 NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 vendor/sm8250_defconfig
+        make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" O=out ARCH=arm64 NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1
 
     - name: Upload Image
       uses: actions/upload-artifact@v3
       with:
-        name: Image-rmx3370
+        name: Image-KernelSU-${{ env.BUILD_TIME }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+
+    - name: Upload DTBO
+      uses: actions/upload-artifact@v3
+      with:
+        name: DTBO-${{ env.BUILD_TIME }}
+        path: kernel_workspace/android-kernel/out/arch/arm64/boot/dtbo.img
+
+    - name: Unzip AnyKernel3
+      run: |
+        unzip $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/Dragon.zip -d $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/Dragon
 
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v3
       with:
-        name: AnyKernel3-bigshot-rmx3370
-        path: kernel_workspace/AnyKernel3/*
+        name: AnyKernel3-dragon-${{ env.BUILD_TIME }}
+        path: kernel_workspace/android-kernel/out/Dragon/*
