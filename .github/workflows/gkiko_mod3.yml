@@ -1,4 +1,4 @@
-name: Build gki ko
+name: Build gki ko_mod3
 on:
   workflow_dispatch:
     inputs:

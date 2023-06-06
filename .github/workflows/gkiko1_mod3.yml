@@ -1,4 +1,4 @@
-name: Build deprecated gki ko
+name: Build deprecated gki ko_mod3
 on:
   workflow_dispatch:
     inputs:
