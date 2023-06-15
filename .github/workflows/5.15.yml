@@ -4,7 +4,7 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android13-5.15-2023-04"
+        default: "android13-5.15-2023-06"
 
 jobs:
   build:
@@ -43,9 +43,6 @@ jobs:
         cd -
     - name: Build Boot
       working-directory: android-kernel
-      env:
-        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
-        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: CCACHE="/usr/bin/ccache" BUILD_BOOT_IMG=1 SKIP_VENDOR_BOOT=1 KERNEL_BINARY=Image AVB_SIGN_BOOT_IMG=1 AVB_BOOT_PARTITION_SIZE=$((64*1024*1024)) AVB_BOOT_ALGORITHM=SHA256_RSA2048 AVB_BOOT_KEY=prebuilts/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem BOOT_IMAGE_HEADER_VERSION=4 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
     - name: Prepare artifacts
       run: |
@@ -65,3 +62,14 @@ jobs:
       with:
           name: AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}
           path: ./AnyKernel3/*
+    - name: Upload To Telegram
+      env:
+        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
+        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      run: |
+        chmod +x $GITHUB_WORKSPACE/upload.sh
+        cd $GITHUB_WORKSPACE/AnyKernel3
+        zip -r AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}.zip ./
+        $GITHUB_WORKSPACE/upload.sh AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}.zip
+        tar -cf Boot_KernelSU_${{ github.event.inputs.TAG }}.tar.gz $GITHUB_WORKSPACE/android-kernel/out/*/dist/boot.img
+        $GITHUB_WORKSPACE/upload.sh Boot_KernelSU_${{ github.event.inputs.TAG }}.tar.gz
