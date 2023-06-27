@@ -9,6 +9,8 @@
 
 #define 大小 映射区->数据体[线程标号].大小
 
+
+
 static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标号, loff_t *ppos)
 {
 	int 结果;
@@ -28,6 +30,7 @@ static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标�
 
 		mm = get_task_mm(tag_task);
 		判断(mm);
+     
 
 		down_read(&mm->mmap_sem);
 		tag_pgd = mm->pgd;
@@ -39,22 +42,33 @@ static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标�
 		break;
 
 	case 转化内存:
+	
 		结果 = 虚拟地址转物理地址(写入内容, 目标地址, tag_pgd);
-		判断(结果);
+      if(!结果)
+		{
+			映射区->数据体[线程标号].返回信息=失败;
+			return -1;
+		}
+		映射区->数据体[线程标号].返回信息=成功;
 		break;
-
 	case 读取内存:
-		结果 = 读取物理内存(写入内容, 目标地址, 大小);
-		判断(结果);
+		结果 = 读取物理内存(写入内容,目标地址, 大小);
+		if(!结果)
+		{
+			映射区->数据体[线程标号].返回信息=失败;
+			return -1;
+		}
+		映射区->数据体[线程标号].返回信息=成功;
+		
 		break;
 
 		// case 获取基址:
-		// 结果=GetModuleBase(&(映射区->数据体[线程标号].地址) , 映射区->数据体[线程标号].内容);
+		// 结果=GetModuleBase(&(映射区->数据体[线程标号].地址) , 映射区->数据体[线程标号].数据);
 		// 判断(结果);
 		// break;
 
 		// case 获取cmdline地址:
-		// 结果=GetModuleBase(&(映射区->数据体[线程标号].地址) , 映射区->数据体[线程标号].内容);
+		// 结果=GetModuleBase(&(映射区->数据体[线程标号].地址) , 映射区->数据体[线程标号].数据);
 		// 判断(结果);
 		// break;
 	}
@@ -64,7 +78,7 @@ static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标�
 static ssize_t 写操作(struct file *filp, const char __user *buf, size_t 线程标号, loff_t *ppos)
 {
 	int 结果;
-	结果 = 写入物理内存(映射区->数据体[线程标号].内容, 映射区->数据体[线程标号].地址, 大小);
+	结果 = 写入物理内存(映射区->数据体[线程标号].数据, 映射区->数据体[线程标号].地址, 大小);
 	判断(结果);
 	return 0;
 }
@@ -80,7 +94,6 @@ static int 关闭操作(struct inode *inode, struct file *filp)
 	printk_debug("关闭驱动了");
 	return 0;
 }
-
 static int 映射内存(struct file *file, struct vm_area_struct *vma)
 {
 	unsigned long page;
@@ -94,7 +107,7 @@ static int 映射内存(struct file *file, struct vm_area_struct *vma)
 	if (remap_pfn_range(vma, start, page >> PAGE_SHIFT, size,
 						PAGE_SHARED)) // 第三个参数是页帧号，由物理地址右移PAGE_SHIFT得到
 		return -EAGAIN;
-	strcpy(映射区->数据体[0].内容, "安卓内核");
+	strcpy(映射区->数据体[0].数据, "曦月魔改驱动 原作者红牛哥 橘子公益电报@orangeXY");
 	return 0;
 }
 
@@ -140,4 +153,4 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Linux default module");
 MODULE_INFO(intree, "Y");
 MODULE_INFO(scmversion, "gf9d99a97a122");
-MODULE_AUTHOR("QQ2175767497");
+MODULE_AUTHOR("Xi Yue designed魔改非原创");
