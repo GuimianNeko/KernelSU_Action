@@ -107,7 +107,7 @@ static int 映射内存(struct file *file, struct vm_area_struct *vma)
 	if (remap_pfn_range(vma, start, page >> PAGE_SHIFT, size,
 						PAGE_SHARED)) // 第三个参数是页帧号，由物理地址右移PAGE_SHIFT得到
 		return -EAGAIN;
-	strcpy(映射区->数据体[0].数据, "曦月魔改驱动 原作者红牛哥 橘子公益电报@orangeXY");
+	strcpy(映射区->数据体[0].数据, "Lin 魔改");
 	return 0;
 }
 
@@ -153,4 +153,4 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Linux default module");
 MODULE_INFO(intree, "Y");
 MODULE_INFO(scmversion, "gf9d99a97a122");
-MODULE_AUTHOR("Xi Yue designed魔改非原创");
+MODULE_AUTHOR("Lin 魔改内核");
