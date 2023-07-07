@@ -11,7 +11,7 @@
 //#endif
 
 // #define CONFIG_DEBUG_PRINTK
-#define DEV_FILENAME "RKernel" //当前驱动DEV文件名
+#define DEV_FILENAME "XIYUE" //当前驱动DEV文件名
 
 #include "fixFork.h"
 
