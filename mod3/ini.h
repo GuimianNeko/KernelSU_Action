@@ -5,10 +5,10 @@
 #define MAX_THREAD 3
 // #define CFI_NEW_KERNEL
 
-#ifdef CFI_NEW_KERNEL
+//#ifdef CFI_NEW_KERNEL
 #define pgd_offset_raw pgd_offset_pgd
 #define mmap_sem mmap_lock
-#endif
+//#endif
 
 // #define CONFIG_DEBUG_PRINTK
 #define DEV_FILENAME "RKernel" //当前驱动DEV文件名
