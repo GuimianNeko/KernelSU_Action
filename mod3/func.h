@@ -218,7 +218,7 @@ ptrr = __va(phy_addr);
 	
 	if(!ptrr || !virt_addr_valid(ptrr))
 	{
-		return 0;
+		goto out;
 	}
 	size_t sz = size_inside_page(phy_addr, 大小);
 	char *ptr = xlate_dev_mem_ptr(phy_addr);
@@ -228,17 +228,17 @@ ptrr = __va(phy_addr);
 		void *bounce;
 	if (!pfn_valid(__phys_to_pfn(phy_addr))) 
 	{
-		return 0;
+		goto out;
 	}
 	bounce = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	
 	if (!bounce) 
 	{
-		return 0;
+		goto out;
 	}
 		if(probe)
 	{
-		return 0;
+		goto out;
 	}
 
 	memcpy(输出 , tmp , sz);
