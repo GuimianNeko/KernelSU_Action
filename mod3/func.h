@@ -304,15 +304,29 @@ static inline int 读取物理内存2(char* lpBuf , size_t phy_addr, size_t read
 static int 写入物理内存(char* 输入 , uint64_t phy_addr , size_t 大小)
 {
 	int retval=-1;
+		void *bounce;
+
 	size_t sz = size_inside_page(phy_addr, 大小);
 	char *ptr = xlate_dev_mem_ptr(phy_addr);
 	if(!ptr)
 	{
 		goto out;
 	}
+		if (!pfn_valid(__phys_to_pfn(phy_addr))) 
+	{
+		goto out;
+	}
+	bounce = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	
+	if (!bounce) 
+	{
+		goto out;
+	}
+
 	memcpy(ptr, 输入, sz);
 	unxlate_dev_mem_ptr(phy_addr, ptr);
 	retval=1;
+	kfree(bounce);
 out:
 	return retval;
 }
