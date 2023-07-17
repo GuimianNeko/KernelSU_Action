@@ -207,48 +207,53 @@ static inline unsigned long size_inside_page(unsigned long start,
 
 char tmp[512];
 
-static int 读取物理内存(void* 输出,uint64_t phy_addr , size_t 大小)
+static inline int 读取物理内存(char* lpBuf , size_t phy_addr, size_t read_size) 
 {
-	int probe=1;
-	int retval=-1;
-	char* ptrr;
-
-	
-ptrr = __va(phy_addr);
-	
-	if(!ptrr || !virt_addr_valid(ptrr))
-	{
-		goto out;
-	}
-	size_t sz = size_inside_page(phy_addr, 大小);
-	char *ptr = xlate_dev_mem_ptr(phy_addr);
-
-	probe = probe_kernel_read(tmp, ptr, sz);
-	
-		void *bounce;
+	void *bounce;
+	size_t realRead = 0;
 	if (!pfn_valid(__phys_to_pfn(phy_addr))) 
 	{
-		goto out;
+		return 0;
 	}
 	bounce = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	
 	if (!bounce) 
 	{
-		goto out;
+		return 0;
 	}
-		if(probe)
+
+	while (read_size > 0) 
 	{
-		goto out;
+		size_t sz = size_inside_page(phy_addr, read_size);
+
+		/*
+		 * On ia64 if a page has been mapped somewhere as uncached, then
+		 * it must also be accessed uncached by the kernel or data
+		 * corruption may occur.
+		 */
+
+		char *ptr = xlate_dev_mem_ptr(phy_addr);
+		int probe;
+
+		if (!ptr) 
+		{
+			break;
+		}
+		probe = probe_kernel_read(bounce, ptr, sz);
+		unxlate_dev_mem_ptr(phy_addr, ptr);
+		if (probe) 
+		{
+			break;
+		}
+		memcpy(lpBuf, bounce, sz);
+		
+		lpBuf += sz;
+		phy_addr += sz;
+		read_size -= sz;
+		realRead += sz;
 	}
-
-	memcpy(输出 , tmp , sz);
-	unxlate_dev_mem_ptr(phy_addr, ptr);
-	
-
-	retval=1;
 	kfree(bounce);
-out:
-	return retval;
+	return realRead;
 }
 
 static inline int 读取物理内存2(char* lpBuf , size_t phy_addr, size_t read_size) 
