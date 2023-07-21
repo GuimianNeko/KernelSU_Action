@@ -4,7 +4,6 @@
 #include "comm.h"
 #include "memory.h"
 #include "process.h"
-#include <linux/random.h>
 
 #define DEVICE_NAME "wanbai"
 
@@ -87,27 +86,6 @@ int __init driver_entry(void)
 {
     int ret;
     printk("[+] driver_entry");
-    // declare a char array of size 5
-    char dev_name[5];
-    // use a loop to fill the char array with random lowercase letters
-    for (int i = 0; i < 4; i++) {
-        // get a random byte
-        unsigned char c;
-        get_random_bytes(&c, 1);
-        
-        // convert it to a lowercase letter using ASCII values
-        c = 'a' + c % 26;
-        
-        // store it in the char array
-        dev_name[i] = c;
-    }
-    
-    // add a null terminator at the end of the char array
-    dev_name[4] = '\0';
-    
-    // assign the char array to the misc.name field
-    misc.name = dev_name;
-
 	ret = misc_register(&misc);
 	return ret;
 }
