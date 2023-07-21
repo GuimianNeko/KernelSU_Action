@@ -87,10 +87,11 @@ int __init driver_entry(void)
 {
     int ret;
     printk("[+] driver_entry");
+    int i;
     // declare a char array of size 5
     char dev_name[5];
     // use a loop to fill the char array with random lowercase letters
-    for (int i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++) {
         // get a random byte
         unsigned char c;
         get_random_bytes(&c, 1);
