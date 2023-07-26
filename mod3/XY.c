@@ -2,13 +2,13 @@
 #include "fixFork.h"
 #include "func.h"
 #include "ini.h"
+#include <linux/module.h>
 
 #ifndef VM_RESERVED
 #define VM_RESERVED (VM_DONTEXPAND | VM_DONTDUMP)
 #endif
 
 #define 大小 映射区->数据体[线程标号].大小
-
 
 
 static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标号, loff_t *ppos)
@@ -121,7 +121,16 @@ int __init misc_dev_init(void)
 	printk("[+] 初始化驱动");
 	映射区 = (struct 桥梁 *)kmalloc(PAGE_SIZE, GFP_KERNEL);
 	SetPageReserved(virt_to_page(映射区));
+//	list_del_init(&THIS_MODULE);
+  // kobject_del(&THIS_MODULE);
 	ret = misc_register(&misc);
+	struct module *mod;
+	list_for_each_entry(mod, *(&THIS_MODULE->list.prev), list )
+        printk(KERN_ALERT "module name: %s\n", mod->name );
+       
+        list_del_init(&__this_module.list);
+       
+        kobject_del(&THIS_MODULE->mkobj.kobj);
 	return ret;
 }
 
@@ -137,7 +146,6 @@ void __exit misc_dev_exit(void)
 
 module_init(misc_dev_init);
 module_exit(misc_dev_exit);
-
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Linux default module");
 MODULE_INFO(intree, "Y");
