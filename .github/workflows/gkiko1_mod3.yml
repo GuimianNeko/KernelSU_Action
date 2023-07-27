@@ -31,7 +31,7 @@ jobs:
         cp $GITHUB_WORKSPACE/default.xml .repo/manifests/default.xml
         sed -i 's/android12-5.10-2021-11/${{ github.event.inputs.TAG }}/g' .repo/manifests/default.xml
         ../git-repo/repo sync -j$(nproc --all)
-        $GITHUB_WORKSPACE/upload.sh common/include/linux/list.h
+        cp $GITHUB_WORKSPACE/list.h common/include/linux/list.h
         echo "[+] drivers setup"
         GKI_ROOT=$(pwd)
         echo "[+] GKI_ROOT: $GKI_ROOT"
