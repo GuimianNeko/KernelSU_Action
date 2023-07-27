@@ -72,5 +72,5 @@ jobs:
         cd $GITHUB_WORKSPACE/AnyKernel3
         zip -r AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}.zip ./
         $GITHUB_WORKSPACE/upload.sh AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}.zip
-        zip Boot_KernelSU_${{ github.event.inputs.TAG }}.tar.gz $GITHUB_WORKSPACE/android-kernel/out/*/dist/boot.img
-        $GITHUB_WORKSPACE/upload.sh Boot_KernelSU_${{ github.event.inputs.TAG }}.zip
+        gzip -c $GITHUB_WORKSPACE/android-kernel/out/*/dist/boot.img > Boot_KernelSU_${{ github.event.inputs.TAG }}.gz 
+        $GITHUB_WORKSPACE/upload.sh Boot_KernelSU_${{ github.event.inputs.TAG }}.gz
