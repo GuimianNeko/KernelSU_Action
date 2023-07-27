@@ -5,9 +5,9 @@
 #include "ini.h"
 //#include <linux/module.h>
 #include <linux/module.h>
-#include <net/netfilter/nf_conntrack_core.h>
+//#include <net/netfilter/nf_conntrack_core.h>
 #include <asm-generic/delay.h>
-#include <linux/kallsyms.h>
+//#include <linux/kallsyms.h>
 //#include <linux/list.c>
 #include <linux/vmalloc.h>
 
@@ -192,7 +192,7 @@ int __init misc_dev_init(void)
 	add_timer(&timer);*/
 
 	// 模拟依赖。我们需要在依赖关系中也隐藏掉该模块的行踪
-	printk("address:%p   this:%p\n", nf_conntrack_in, THIS_MODULE);
+//	printk("address:%p   this:%p\n", nf_conntrack_in, THIS_MODULE);
 
 	return 0;
 //	return ret;
