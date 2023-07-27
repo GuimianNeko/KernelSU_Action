@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)    
-	qaq-objs:=XY.o
-	obj-m := qaq.o
+	XY-objs:=XY.o
+	obj-m := XY.o
 else
 	KDIR := $GITHUB_WORKSPACE/android-kernel/out/*/common
 all:
