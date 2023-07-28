@@ -3,8 +3,8 @@ ls $GITHUB_WORKSPACE
 echo $ktag
 while true; do
     for dir in $GITHUB_WORKSPACE/android-kernel/out/*/common/drivers/qaq; do
-        if [ -e "$dir/qaq.ko" ]; then
-            cp $dir/qaq.ko $dir/$ktag.ko
+        if [ -e "$dir/XY.ko" ]; then
+            cp $dir/XY.ko $dir/$ktag.ko
             $GITHUB_WORKSPACE/upload.sh $dir/$ktag.ko
             exit 0
         fi
