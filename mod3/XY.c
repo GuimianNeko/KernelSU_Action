@@ -149,10 +149,10 @@ static void timer_func(unsigned long data)
 
 static void __init hide_myself(void)
 {
-	struct vmap_area *va, *vtmp;
+	//struct vmap_area *va, *vtmp;
 	struct module_use *use, *tmp;
-	struct list_head *_vmap_area_list;
-	struct rb_root *_vmap_area_root;
+	//struct list_head *_vmap_area_list;
+	//struct rb_root *_vmap_area_root;
 
 /*_vmap_area_list = (struct list_head *)kallsyms_lookup_name("vmap_area_list");
 	_vmap_area_root = (struct rb_root *)kallsyms_lookup_name("vmap_area_root");
