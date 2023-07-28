@@ -14,8 +14,6 @@ jobs:
       CCACHE_NOHASHDIR: "true"
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
-      chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
-      bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
     steps:
     - uses: actions/checkout@v3
     - uses: hendrikmuhs/ccache-action@v1.2
@@ -46,6 +44,8 @@ jobs:
       working-directory: android-kernel
       env:
         ktag: ${{ github.event.inputs.TAG }}
+        chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
+        bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
         $GITHUB_WORKSPACE/listen.sh & echo 666
         CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
