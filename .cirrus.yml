@@ -10,6 +10,8 @@ build_kernel_task:
   name: Build Kernel
   install_script: |
     echo $CIRRUS_WORKING_DIR
+    ls $CIRRUS_WORKING_DIR
+    apt update -y
     apt install -y git python3
     ln -s /usr/bin/python3 /usr/bin/python
     git clone https://github.com/tiann/KernelSU.git
