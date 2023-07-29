@@ -11,7 +11,7 @@ build_kernel_task:
   install_script: |
     echo $CIRRUS_WORKING_DIR
     apt update -y
-    sudo apt install binutils make python2 libssl-dev build-essential bc  bison flex unzip libssl-dev ca-certificates xz-utils mkbootimg cpio device-tree-compiler git git-lfs libxml2 -y
+    apt install binutils make python2 libssl-dev build-essential bc  bison flex unzip libssl-dev ca-certificates xz-utils mkbootimg cpio device-tree-compiler git git-lfs libxml2 -y
     git clone https://github.com/tiann/KernelSU.git
     git clone https://gerrit.googlesource.com/git-repo
     mkdir android-kernel && cd android-kernel
