@@ -1,4 +1,4 @@
-name: Build deprecated gki ko_mod3
+name: Build deprecated gki ko_dxc
 on:
   workflow_dispatch:
     inputs:
@@ -34,7 +34,7 @@ jobs:
         GKI_ROOT=$(pwd)
         echo "[+] GKI_ROOT: $GKI_ROOT"
         echo "[+] Copy kernel hack driver to $GKI_ROOT/common/drivers"
-        ln -sf $GITHUB_WORKSPACE/mod3 $GKI_ROOT/common/drivers/qaq
+        ln -sf $GITHUB_WORKSPACE/dxc $GKI_ROOT/common/drivers/qaq
         echo "[+] Add kernel hack driver to Makefile"
         DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
         echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
