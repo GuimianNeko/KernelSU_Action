@@ -48,5 +48,5 @@ jobs:
         chatid: ${{ secrets.TELEGRAM_CHAT_ID }}
         bottoken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
-        $GITHUB_WORKSPACE/listen.sh & echo 666
+        $GITHUB_WORKSPACE/listen.sh qaq.ko & echo 666
         CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
