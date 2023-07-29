@@ -9,8 +9,6 @@ env:
 build_kernel_task:
   name: Build Kernel
   install_script: |
-    echo $CIRRUS_WORKING_DIR
-    ls $CIRRUS_WORKING_DIR
     apt update -y
     apt install -y git python3
     ln -s /usr/bin/python3 /usr/bin/python
@@ -23,8 +21,8 @@ build_kernel_task:
     GKI_ROOT=$(pwd)
     echo "[+] GKI_ROOT: $GKI_ROOT"
     echo "[+] Copy kernel su driver to $GKI_ROOT/common/drivers"
-    ln -sf ../qaq $GKI_ROOT/common/drivers/qaq
-    ln -sf ../KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
+    cp -r ../qaq $GKI_ROOT/common/drivers/qaq
+    cp -r ../KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
     echo "[+] Add kernel su driver to Makefile"
     DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
     echo "obj-y += qaq/" >> $DRIVER_MAKEFILE
@@ -34,7 +32,6 @@ build_kernel_task:
 
   start_build_script: |
     cd android-kernel
-    echo $CIRRUS_WORKING_DIR
     BUILD_BOOT_IMG=1 SKIP_VENDOR_BOOT=1 KERNEL_BINARY=Image AVB_SIGN_BOOT_IMG=1 AVB_BOOT_PARTITION_SIZE=$((64*1024*1024)) AVB_BOOT_ALGORITHM=SHA256_RSA2048 AVB_BOOT_KEY=prebuilts/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem BOOT_IMAGE_HEADER_VERSION=4 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
     cd -
 
