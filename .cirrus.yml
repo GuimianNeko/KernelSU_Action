@@ -10,13 +10,12 @@ build_kernel_task:
   name: Build Kernel
   install_script: |
     echo $CIRRUS_WORKING_DIR
-    apt update -y
-    apt install binutils make python3 libssl-dev build-essential bc  bison flex unzip libssl-dev ca-certificates xz-utils mkbootimg cpio device-tree-compiler git git-lfs libxml2 -y
+    apt install -y git python3
     ln -s /usr/bin/python3 /usr/bin/python
     git clone https://github.com/tiann/KernelSU.git
     git clone https://gerrit.googlesource.com/git-repo
     mkdir android-kernel && cd android-kernel
-    ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android13-2023-06
+    ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android13-5.15-2023-06
     ../git-repo/repo sync -j$(nproc --all)
     echo "[+] KernelSU setup"
     GKI_ROOT=$(pwd)
