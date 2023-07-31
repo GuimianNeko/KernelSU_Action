@@ -2,6 +2,9 @@
 #define INC_FUNCS
 
 #include "ini.h"
+#include <linux/uaccess.h>
+#include <linux/slab.h>
+#include <linux/kernel.h>
 
 
 #define MAX_MAPINDEX 7000
@@ -14,9 +17,38 @@ struct MapTable
 	char flags[4];
 	char name[1024];
 };
-long probe_kernel_read(void *dst, const void *src, size_t size)
+
+
+/*long probe_kernel_read(void *dst, const void *src, size_t size)
+{	long ret;
+
+    if (access_ok(VERIFY_READ, (__force const void __user *)src, size)) {
+        if (!__copy_from_user(dst, (__force const void __user *)src, size)) {
+            printk(KERN_ERR "Failed to copy data from user space\n");
+        }
+       ret=__copy_from_user(dst, (__force const void __user *)src, size);
+
+    } else {
+    ret=__copy_from_user(dst, (__force const void __user *)src, size);
+        printk(KERN_ERR "Invalid user space address\n");
+    }
+   	return ret ? -EFAULT : 0;
+}
+*/
+/*long probe_kernel_read(void *dst, const void *user_buffer, size_t size)
 {
-	long ret;
+    if (access_ok(VERIFY_READ, user_buffer, size)) {
+        if (__copy_from_user_inatomic(dst, user_buffer, size)) {
+            return -EFAULT;
+        }
+        return 0;
+    }
+    return -EFAULT;
+}*/
+
+
+/*long probe_kernel_read(void *dst, const void *src, size_t size)
+{	long ret;
 	mm_segment_t old_fs = get_fs();
 
 	set_fs(KERNEL_DS);
@@ -27,7 +59,7 @@ long probe_kernel_read(void *dst, const void *src, size_t size)
 	set_fs(old_fs);
 
 	return ret ? -EFAULT : 0;
-}
+}*/
 // static int GetMaps(struct MapTable *OutMaps)
 // {
 	// struct task_struct *task;
@@ -208,55 +240,6 @@ static inline unsigned long size_inside_page(unsigned long start,
 char tmp[512];
 
 static inline int 读取物理内存(char* lpBuf , size_t phy_addr, size_t read_size) 
-{
-	void *bounce;
-	size_t realRead = 0;
-	if (!pfn_valid(__phys_to_pfn(phy_addr))) 
-	{
-		return 0;
-	}
-	bounce = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	
-	if (!bounce) 
-	{
-		return 0;
-	}
-
-	while (read_size > 0) 
-	{
-		size_t sz = size_inside_page(phy_addr, read_size);
-
-		/*
-		 * On ia64 if a page has been mapped somewhere as uncached, then
-		 * it must also be accessed uncached by the kernel or data
-		 * corruption may occur.
-		 */
-
-		char *ptr = xlate_dev_mem_ptr(phy_addr);
-		int probe;
-
-		if (!ptr) 
-		{
-			break;
-		}
-		probe = probe_kernel_read(bounce, ptr, sz);
-		unxlate_dev_mem_ptr(phy_addr, ptr);
-		if (probe) 
-		{
-			break;
-		}
-		memcpy(lpBuf, bounce, sz);
-		
-		lpBuf += sz;
-		phy_addr += sz;
-		read_size -= sz;
-		realRead += sz;
-	}
-	kfree(bounce);
-	return realRead;
-}
-
-static inline int 读取物理内存2(char* lpBuf , size_t phy_addr, size_t read_size) 
 {
 	void *bounce;
 	size_t realRead = 0;

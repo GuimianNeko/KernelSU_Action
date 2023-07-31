@@ -3,12 +3,12 @@
 
 
 #define MAX_THREAD 3
-// #define CFI_NEW_KERNEL
-
-//#ifdef CFI_NEW_KERNEL
+#define CFI_NEW_KERNEL
+#ifdef CFI_NEW_KERNEL
+#define probe_kernel_read copy_from_kernel_nofault
 #define pgd_offset_raw pgd_offset_pgd
 #define mmap_sem mmap_lock
-//#endif
+#endif
 
 // #define CONFIG_DEBUG_PRINTK
 #define DEV_FILENAME "XIHHYUE" //当前驱动DEV文件名
@@ -81,7 +81,7 @@
 #include <linux/version.h>
 #include <linux/writeback.h>
 #include <trace/events/kmem.h>
-
+#include <linux/uaccess.h>
 
 
 #define 转化内存 '\x01'
