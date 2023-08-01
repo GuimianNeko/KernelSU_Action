@@ -15,7 +15,7 @@
 #include <linux/init.h>
 #include <linux/random.h>
 static char node_name[32];
-static char nod_name;
+//static char nod_name;
 
 #ifndef VM_RESERVED
 #define VM_RESERVED (VM_DONTEXPAND | VM_DONTDUMP)
