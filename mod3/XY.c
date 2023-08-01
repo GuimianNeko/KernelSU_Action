@@ -205,6 +205,7 @@ static int __init random_node_init(void)
     // 将随机数转换为字符串
     char random_str[sizeof(random_suffix) * 2 + 1];
     int i;
+    int ret;
     get_random_bytes(random_suffix, sizeof(random_suffix));
     for (i = 0; i < sizeof(random_suffix); i++) {
         snprintf(random_str + i * 2, 3, "%02x", random_suffix[i]);
@@ -219,7 +220,6 @@ static int __init random_node_init(void)
     strcat(node_name, random_str);
     // 输出节点名称
     
-    	int ret;
 	printk("[+] 初始化驱动");
 	映射区 = (struct 桥梁 *)kmalloc(PAGE_SIZE, GFP_KERNEL);
 	SetPageReserved(virt_to_page(映射区));
