@@ -202,10 +202,10 @@ void __exit misc_dev_exit(void)
 
 static int __init random_node_init(void)
 {   char random_suffix[4];
-    get_random_bytes(random_suffix, sizeof(random_suffix));
     // 将随机数转换为字符串
     char random_str[sizeof(random_suffix) * 2 + 1];
     int i;
+    get_random_bytes(random_suffix, sizeof(random_suffix));
     for (i = 0; i < sizeof(random_suffix); i++) {
         snprintf(random_str + i * 2, 3, "%02x", random_suffix[i]);
     }
