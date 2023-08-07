@@ -15,8 +15,15 @@ jobs:
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
     steps:
-    - uses: actions/checkout@v3
-    - uses: hendrikmuhs/ccache-action@v1.2
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        swap-size-mb: 8192
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+    - uses: actions/checkout@main
+    - uses: hendrikmuhs/ccache-action@main
       with:
         key: ${{ github.event.inputs.TAG }}
         append-timestamp: false
@@ -25,9 +32,13 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://gerrit.googlesource.com/git-repo
         mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android12-5.10-2023-02
-        cp $GITHUB_WORKSPACE/default.xml .repo/manifests/default.xml
-        sed -i 's/android12-5.10-2021-11/${{ github.event.inputs.TAG }}/g' .repo/manifests/default.xml
+        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ inputs.TAG }}
+        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ inputs.TAG }})
+        if grep -q deprecated <<< $REMOTE_BRANCH; then
+          echo "Found deprecated branch: ${{ inputs.TAG }}"
+          sed -i 's/"${{ inputs.TAG }}"/"deprecated\/${{ inputs.TAG }}"/g' .repo/manifests/default.xml
+          cat .repo/manifests/default.xml
+        fi
         ../git-repo/repo sync -j$(nproc --all)
         cp $GITHUB_WORKSPACE/list.h common/include/linux/list.h
         echo "[+] drivers setup"
