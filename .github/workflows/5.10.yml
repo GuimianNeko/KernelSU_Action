@@ -95,7 +95,8 @@ jobs:
         echo "LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4" >> $GITHUB_ENV
         echo "MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py" >> $GITHUB_ENV
         echo "UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py" >> $GITHUB_ENV
-        bash $GITHUB_WORKSPACE/KernelSU_Action/build_a12.sh
+        bash $GITHUB_WORKSPACE/build_a12.sh
+        cd $GITHUB_WORKSPACE
     - name: Prepare artifacts
       run: |
         OUTDIR=android-kernel/out/*/dist/
