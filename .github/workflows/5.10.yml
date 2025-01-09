@@ -78,7 +78,7 @@ jobs:
         sed -i "\$s/\$res/-android12-9-00085-g226a9632f13d-ab11136126/" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
-      run: LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
