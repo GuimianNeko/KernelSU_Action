@@ -84,7 +84,6 @@ jobs:
         cd $GITHUB_WORKSPACE
         AOSP_MIRROR=https://android.googlesource.com
         BRANCH=main-kernel-build-2024
-        ANDROID_VERSION=android12
         # Clone necessary prebuilt tools
         git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
         git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
@@ -103,7 +102,7 @@ jobs:
         $GZIP -n -k -f -9 ../Image >../Image.gz
         cd ./bootimgs
         GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-${{ github.event.inputs.TAG }}_r1.zip
-	curl -Lo gki-kernel.zip "$GKI_URL"
+        curl -Lo gki-kernel.zip "$GKI_URL"
         unzip gki-kernel.zip && rm gki-kernel.zip
         echo 'Unpack prebuilt boot.img'
         $UNPACK_BOOTIMG --boot_img="./boot-5.10.img"       
