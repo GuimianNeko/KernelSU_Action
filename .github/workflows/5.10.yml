@@ -75,7 +75,7 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "\$s/\$res/\-android12\-9\-00085\-g226a9632f13d\-ab11136126/" ./common/scripts/setlocalversion
+        sed -i "\$s/\$res/\-android12-9-00085-g226a9632f13d-ab11136126/" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
       run: LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
