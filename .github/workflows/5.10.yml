@@ -88,12 +88,13 @@ jobs:
         git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
         git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
         git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
+        pip3 install telethon
         # Export paths to required tools as environment variables
-        echo "AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool" >> $GITHUB_ENV
-        echo "GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip" >> $GITHUB_ENV
-        echo "LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4" >> $GITHUB_ENV
-        echo "MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py" >> $GITHUB_ENV
-        echo "UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py" >> $GITHUB_ENV
+        export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
+        export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
+        export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
+        export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
+        export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
         cd android-kernel && mkdir bootimgs
         cp ./out/*/dist/Image ./bootimgs
         cp ./out/*/dist/Image.lz4 ./bootimgs
@@ -129,5 +130,5 @@ jobs:
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v3
       with:
-          name: AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}
-          path: ./AnyKernel3/*
+        name: AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}
+        path: ./AnyKernel3/*
