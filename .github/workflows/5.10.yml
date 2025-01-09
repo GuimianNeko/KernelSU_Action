@@ -78,7 +78,24 @@ jobs:
         sed -i "s/-dirty/''/g" ./common/scripts/setlocalversion                                                                                                
     - name: Build Boot
       working-directory: android-kernel
-      run: CCACHE="/usr/bin/ccache" BUILD_BOOT_IMG=1 SKIP_VENDOR_BOOT=1 KERNEL_BINARY=Image AVB_SIGN_BOOT_IMG=1 AVB_BOOT_PARTITION_SIZE=$((64*1024*1024)) AVB_BOOT_ALGORITHM=SHA256_RSA2048 AVB_BOOT_KEY=prebuilts/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem BOOT_IMAGE_HEADER_VERSION=4 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: LTO=full BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+    - name: Download prebuilt toolchain
+      run: |
+        cd $GITHUB_WORKSPACE
+        AOSP_MIRROR=https://android.googlesource.com
+        BRANCH=main-kernel-build-2024
+        ANDROID_VERSION=android12
+        # Clone necessary prebuilt tools
+        git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
+        git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
+        git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
+        # Export paths to required tools as environment variables
+        echo "AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool" >> $GITHUB_ENV
+        echo "GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip" >> $GITHUB_ENV
+        echo "LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4" >> $GITHUB_ENV
+        echo "MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py" >> $GITHUB_ENV
+        echo "UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py" >> $GITHUB_ENV
+        bash $GITHUB_WORKSPACE/build_a12.sh
     - name: Prepare artifacts
       run: |
         OUTDIR=android-kernel/out/*/dist/
@@ -91,7 +108,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Boot_KernelSU_${{ github.event.inputs.TAG }}
-        path: android-kernel/out/*/dist/boot.img
+        path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot.img
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v3
       with:
