@@ -8,7 +8,7 @@
             cd ./bootimgs
             
             GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-${{ github.event.inputs.TAG }}_r1.zip
-			      FALLBACK_URL=https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2023-01_r1.zip
+	    FALLBACK_URL=https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2023-01_r1.zip
             status=$(curl -sL -w "%{http_code}" "$GKI_URL" -o /dev/null)
                 
             if [ "$status" = "200" ]; then
