@@ -74,11 +74,13 @@ jobs:
         echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        sed -i "/stable_scmversion_cmd/s/-maybe-dirty/-Y/g" ./build/kernel/kleaf/impl/stamp.bzl
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "s/-dirty/''/g" ./common/scripts/setlocalversion
+        rm -rf ./common/android/abi_gki_protected_exports_aarch64
+        rm -rf ./common/android/abi_gki_protected_exports_x86_64
     - name: Build Boot
       working-directory: android-kernel
-      run: LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: tools/bazel build --lto=thin --stamp //common:kernel_aarch64_dist
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -96,27 +98,22 @@ jobs:
         export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
         export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
         cd android-kernel && mkdir bootimgs
-        cp ./out/*/dist/Image ./bootimgs
-        cp ./out/*/dist/Image.lz4 ./bootimgs
-        cp ./out/*/dist/Image ../
-        cp ./out/*/dist/Image.lz4 ../
+        cp ./bazel-bin/common/kernel_aarch64/Image ./bootimgs
+        cp ./bazel-bin/common/kernel_aarch64/Image.lz4 ./bootimgs
+        cp ./bazel-bin/common/kernel_aarch64/Image ../
+        cp ./bazel-bin/common/kernel_aarch64/Image.lz4 ../
         $GZIP -n -k -f -9 ../Image >../Image.gz
-        cd ./bootimgs
-        GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-android14-6.1-2024-08_r1.zip
-        curl -Lo gki-kernel.zip "$GKI_URL"
-        unzip gki-kernel.zip && rm gki-kernel.zip
-        echo 'Unpack prebuilt boot.img'
-        $UNPACK_BOOTIMG --boot_img="./boot-6.1.img"       
+        cd ./bootimgs"       
         echo 'Building Image.gz'
         $GZIP -n -k -f -9 Image >Image.gz                
         echo 'Building boot.img'
-        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level 2024-08
+        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot.img ./${{ github.event.inputs.TAG }}-boot.img
         cd ..    
     - name: Prepare artifacts
       run: |
-        OUTDIR=android-kernel/out/*/dist/
+        OUTDIR=android-kernel/bootimgs/
         mkdir output
         cp $OUTDIR/Image ./output/
         git clone https://github.com/Kernel-SU/AnyKernel3
