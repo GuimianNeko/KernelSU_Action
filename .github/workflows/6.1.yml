@@ -40,13 +40,13 @@ jobs:
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
         curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-        cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
+        cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU-Next
         patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
         cd ../common
-        patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
+        patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         cd ..          
@@ -75,7 +75,7 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "\$s/\$res/-android12-9-00085-g226a9632f13d-ab11136126/" ./common/scripts/setlocalversion
+        sed -i "s/-dirty/''/g" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
       run: LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
@@ -106,11 +106,11 @@ jobs:
         curl -Lo gki-kernel.zip "$GKI_URL"
         unzip gki-kernel.zip && rm gki-kernel.zip
         echo 'Unpack prebuilt boot.img'
-        $UNPACK_BOOTIMG --boot_img="./boot-5.10.img"       
+        $UNPACK_BOOTIMG --boot_img="./boot-6.1.img"       
         echo 'Building Image.gz'
         $GZIP -n -k -f -9 Image >Image.gz                
         echo 'Building boot.img'
-        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level 2024-01
+        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level 2024-08
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot.img ./${{ github.event.inputs.TAG }}-boot.img
         cd ..    
