@@ -15,7 +15,7 @@ jobs:
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ github.event.inputs.TAG }}
@@ -80,7 +80,7 @@ jobs:
         rm -rf ./common/android/abi_gki_protected_exports_x86_64
     - name: Build Boot
       working-directory: android-kernel
-      run: tools/bazel build --lto=thin --stamp //common:kernel_aarch64_dist
+      run: tools/bazel build --config=fast //common:kernel_aarch64_dist
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -120,12 +120,12 @@ jobs:
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
     - name: Upload Boot
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Boot_KernelSU_${{ github.event.inputs.TAG }}
         path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot.img
     - name: Upload AnyKernel3
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}
         path: ./AnyKernel3/*
