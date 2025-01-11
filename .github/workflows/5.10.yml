@@ -114,7 +114,6 @@ jobs:
             echo "[+] $GKI_URL not found, using $FALLBACK_URL"
             curl -Lo gki-kernel.zip "$FALLBACK_URL"
         fi
-        curl -Lo gki-kernel.zip "$GKI_URL"
         unzip gki-kernel.zip && rm gki-kernel.zip
         echo 'Unpack prebuilt boot.img'
         $UNPACK_BOOTIMG --boot_img="./boot-5.10.img"       
