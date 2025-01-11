@@ -1,10 +1,16 @@
-name: Build ACK 5.10 with KSU
+name: Build GKI 5.10 with KSU
 on:
   workflow_dispatch:
     inputs:
       TAG:
         required: true
         default: "android12-5.10-2024-01"
+      patch_level:
+        required: true
+        type: string
+        default: "2024-01"
+        description: >
+          Set Kernel patch level
 
 jobs:
   build:
@@ -98,11 +104,16 @@ jobs:
         cd android-kernel && mkdir bootimgs
         cp ./out/*/dist/Image ./bootimgs
         cp ./out/*/dist/Image.lz4 ./bootimgs
-        cp ./out/*/dist/Image ../
-        cp ./out/*/dist/Image.lz4 ../
-        $GZIP -n -k -f -9 ../Image >../Image.gz
         cd ./bootimgs
         GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-${{ github.event.inputs.TAG }}_r1.zip
+        FALLBACK_URL=https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2024-01_r1.zip
+        status=$(curl -sL -w "%{http_code}" "$GKI_URL" -o /dev/null)
+        if [ "$status" = "200" ]; then
+            curl -Lo gki-kernel.zip "$GKI_URL"
+        else
+            echo "[+] $GKI_URL not found, using $FALLBACK_URL"
+            curl -Lo gki-kernel.zip "$FALLBACK_URL"
+        fi
         curl -Lo gki-kernel.zip "$GKI_URL"
         unzip gki-kernel.zip && rm gki-kernel.zip
         echo 'Unpack prebuilt boot.img'
@@ -110,25 +121,31 @@ jobs:
         echo 'Building Image.gz'
         $GZIP -n -k -f -9 Image >Image.gz                
         echo 'Building boot.img'
-        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level 2024-01
+        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot.img ./${{ github.event.inputs.TAG }}-boot.img
+        echo 'Building boot-gz.img'
+        mkbootimg.py --header_version 4 --kernel Image.gz --output boot-gz.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
+        avbtool.py add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-gz.img ./${{ github.event.inputs.TAG }}-boot-gz.img
+        echo 'Building boot-lz4.img'
+        mkbootimg.py --header_version 4 --kernel Image.lz4 --output boot-lz4.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
+        avbtool.py add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-lz4.img ./${{ github.event.inputs.TAG }}-boot-lz4.img
         cd ..    
     - name: Prepare artifacts
       run: |
         OUTDIR=android-kernel/out/*/dist/
-        mkdir output
-        cp $OUTDIR/Image ./output/
         git clone https://github.com/Kernel-SU/AnyKernel3
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
     - name: Upload Boot
       uses: actions/upload-artifact@v4
       with:
-        name: Boot_KernelSU_${{ github.event.inputs.TAG }}
-        path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot.img
+        name: Boot-${{ github.event.inputs.TAG }}
+        path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot*
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3_KernelSU_${{ github.event.inputs.TAG }}
+        name: AnyKernel3-${{ github.event.inputs.TAG }}
         path: ./AnyKernel3/*
