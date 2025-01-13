@@ -53,7 +53,25 @@ jobs:
         # Verify repo version and sync the kernel source
         ../git-repo/repo --version
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+        
+        git clone https://github.com/rifsxd/KernelSU-Next.git -b next
+        echo "[+] KernelSU-Next setup"
+        GKI_ROOT=$(pwd)
+        echo "[+] GKI_ROOT: $GKI_ROOT"
+        echo "[+] Copy KernelSU-Next driver to $GKI_ROOT/common/drivers"
+        ln -sf ./KernelSU-Next/kernel $GKI_ROOT/common/drivers/kernelsu
+        echo "[+] Add KernelSU-Next driver to Makefile"
+        DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
+        DRIVER_KCONFIG=$GKI_ROOT/common/drivers/Kconfig
+        grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> "$DRIVER_MAKEFILE"
+        grep -q "kernelsu" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\\source \"drivers/kernelsu/Kconfig\"" "$DRIVER_KCONFIG"
+        if [ "$IS_DEBUG_KERNEL" = "true" ]; then
+          echo "[+] Enable debug features for kernel"
+          printf "\nccflags-y += -DCONFIG_KSU_DEBUG\n" >> $GITHUB_WORKSPACE/KernelSU-Next/kernel/Makefile
+        fi
+        ../git-repo/repo status
+        echo "[+] KernelSU-Next setup done."
+        
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_${{ inputs.susfs_version }}.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
