@@ -114,7 +114,7 @@ jobs:
         ../../git-repo/repo status
     - name: Build Boot
       working-directory: android-kernel
-      run: tools/bazel run --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist
+      run: tools/bazel run --config=fast --lto=thin //common:kernel_aarch64_dist
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
