@@ -101,7 +101,7 @@ jobs:
         git config --global user.email "bot@kernelsu.org"
         git config --global user.name "KernelSUBot"
         cd common/ && git add -A && git commit -a -m "Add KernelSU"
-        ../git-repo/repo status
+        ../../git-repo/repo status
     - name: Build Boot
       working-directory: android-kernel
       run: tools/bazel run --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist
