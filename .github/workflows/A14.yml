@@ -15,11 +15,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_MAXSIZE: "2G"
-      CCACHE_HARDLINK: "true"
+    timeout-minutes: 360
     steps:
     - name: Maximize build space
         uses: easimon/maximize-build-space@master
@@ -30,11 +26,6 @@ jobs:
           remove-android: 'true'
           remove-haskell: 'true'
           remove-codeql: 'true'
-    - uses: actions/checkout@v4
-    - uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{ github.event.inputs.TAG }}
-        append-timestamp: false
     - name: Download Kernel Source
       run: |
         sudo apt update
