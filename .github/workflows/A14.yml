@@ -90,10 +90,18 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         sed -i "/stable_scmversion_cmd/s/-maybe-dirty/-mhwy/g" ./build/kernel/kleaf/impl/stamp.bzl
-        sed -i 's/UTS_VERSION="\$(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN)"/UTS_VERSION="\#1 SMP PREEMPT $(date "+%a %b %d %H:%M:%S UTC %Y")"/g' ./common/scripts/mkcompile_h
+        ＃sed -i 's/UTS_VERSION="\$(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN)"/UTS_VERSION="\#1 SMP PREEMPT $(date "+%a %b %d %H:%M:%S UTC %Y")"/g' ./common/scripts/mkcompile_h
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         rm -rf ./common/android/abi_gki_protected_exports_aarch64
         rm -rf ./common/android/abi_gki_protected_exports_x86_64
+    - name: Make working directory clean to avoid dirty
+      working-directory: android-kernel
+      run: |
+        rm common/android/abi_gki_protected_exports_* || echo "No protected exports!"
+        git config --global user.email "bot@kernelsu.org"
+        git config --global user.name "KernelSUBot"
+        cd common/ && git add -A && git commit -a -m "Add KernelSU"
+        repo status
     - name: Build Boot
       working-directory: android-kernel
       run: tools/bazel run --config=fast --lto=thin //common:kernel_aarch64_dist
