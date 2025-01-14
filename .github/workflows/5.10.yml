@@ -41,6 +41,8 @@ jobs:
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/TheWildJames/kernel_patches.git
         git clone https://gerrit.googlesource.com/git-repo
+        git config --global user.name "wizxy"
+        git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
         ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ github.event.inputs.TAG }}
         REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ github.event.inputs.TAG }})
