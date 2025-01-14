@@ -238,7 +238,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Boot_${{ inputs.TAG }}
-        path: ./bootimgs/${{ inputs.TAG }}-boot*
+        path: android-kernel/bootimgs/${{ inputs.TAG }}-boot*
 
     - name: Upload AnyKernel3
       if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == false
