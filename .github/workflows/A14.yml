@@ -11,9 +11,20 @@ on:
         default: "gki-android14-6.1"
         description: >
           Set susfs version
+      ENABLE_KSU:
+        required: true
+        type: boolean
+        default: true
+        description: 'Enable KernelSU'
+      BUILD_AS_LKM:
+        required: true
+        type: boolean
+        default: false
+        description: 'Build KernelSU as LKM'
 
 jobs:
   build:
+    name: Build ${{ inputs.TAG }}
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -21,39 +32,43 @@ jobs:
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
     steps:
-    - name: Maximize build space
+    - name: Maximize Build Space
       uses: easimon/maximize-build-space@master
       with:
+        swap-size-mb: 8192
         root-reserve-mb: 8192
         temp-reserve-mb: 2048
         remove-dotnet: 'true'
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
-    - uses: actions/checkout@v4
-    - uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{ github.event.inputs.TAG }}
-        append-timestamp: false
+
     - name: Download Kernel Source
       run: |
+        sudo apt-get remove firefox -y
+        sudo apt-get update
+        sudo apt-get upgrade -y
+        sudo apt-get install repo -y
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
         git clone https://github.com/TheWildJames/kernel_patches.git
-        git clone https://gerrit.googlesource.com/git-repo
+        git config --global user.name "YuKongA"
+        git config --global user.email 70465933+YuKongA@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ github.event.inputs.TAG }}
-        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ github.event.inputs.TAG }})
-        DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml          
-        # Check if the branch is deprecated and adjust the manifest
+        repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ inputs.TAG }} --repo-rev=v2.16
+        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ inputs.TAG }})
+        DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
         if grep -q deprecated <<< $REMOTE_BRANCH; then
-            echo "Found deprecated branch: $FORMATTED_BRANCH"
-            sed -i "s/\"${{ github.event.inputs.TAG }}\"/\"deprecated\/${{ github.event.inputs.TAG }}\"/g" $DEFAULT_MANIFEST_PATH
+          echo "Found deprecated branch: ${{ inputs.TAG }}"
+          sed -i 's/"${{ inputs.TAG }}"/"deprecated\/${{ inputs.TAG }}"/g' $DEFAULT_MANIFEST_PATH
         fi
-        # Verify repo version and sync the kernel source
-        ../git-repo/repo --version
-        ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast     
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next        
+        repo --trace sync -q -c -j$(nproc --all) --no-tags
+
+    - name: Setup KernelSU
+      if: inputs.ENABLE_KSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/android-kernel
+        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_${{ inputs.susfs_version }}.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
@@ -90,63 +105,129 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #sed -i "/stable_scmversion_cmd/s/-maybe-dirty/-mhwy/g" ./build/kernel/kleaf/impl/stamp.bzl
-        #sed -i 's/UTS_VERSION="\$(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN)"/UTS_VERSION="\#1 SMP PREEMPT $(date "+%a %b %d %H:%M:%S UTC %Y")"/g' ./common/scripts/mkcompile_h
-        #perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Sat Apr 20 04:20:00 UTC 2024"}' ./common/scripts/mkcompile_h
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        rm -rf ./common/android/abi_gki_protected_exports_aarch64
-        rm -rf ./common/android/abi_gki_protected_exports_x86_64         
-    - name: Build Boot
+      
+    - name: Setup for LKM
+      if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == true
       working-directory: android-kernel
-      run: tools/bazel run --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist
-    - name: Download prebuilt toolchain
       run: |
-        cd $GITHUB_WORKSPACE
-        AOSP_MIRROR=https://android.googlesource.com
-        BRANCH=main-kernel-build-2024
-        # Clone necessary prebuilt tools
-        git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
-        git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
-        git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
-        pip3 install telethon
-        # Export paths to required tools as environment variables
-        export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
-        export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
-        export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
-        export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
-        export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
-        cd android-kernel && mkdir bootimgs
-        cp ./bazel-bin/common/kernel_aarch64/Image ./bootimgs
-        cp ./bazel-bin/common/kernel_aarch64/Image.lz4 ./bootimgs
-        cd ./bootimgs    
-        echo 'Building Image.gz'
-        $GZIP -n -k -f -9 Image >Image.gz                
-        echo 'Building boot.img'
-        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        cp ./boot.img ./${{ github.event.inputs.TAG }}-boot.img
-        echo 'Building boot-gz.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        cp ./boot-gz.img ./${{ github.event.inputs.TAG }}-boot-gz.img
-        echo 'Building boot-lz4.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        cp ./boot-lz4.img ./${{ github.event.inputs.TAG }}-boot-lz4.img
-        cd ..    
+        pip install ast-grep-cli
+        sudo apt-get install llvm-15 -y
+        ast-grep -U -p '$$$ check_exports($$$) {$$$}' -r '' common/scripts/mod/modpost.c
+        ast-grep -U -p 'check_exports($$$);' -r '' common/scripts/mod/modpost.c
+        sed -i '/config KSU/,/help/{s/default y/default m/}' common/drivers/kernelsu/Kconfig
+        echo "drivers/kernelsu/kernelsu.ko" >> common/android/gki_aarch64_modules
+        if [ ! -e build/build.sh ]; then
+          sed -i 's/needs unknown symbol/Dont abort when unknown symbol/g' build/kernel/*.sh || echo "No unknown symbol scripts found"
+          if [ -e common/modules.bzl ]; then
+            sed -i 's/_COMMON_GKI_MODULES_LIST = \[/_COMMON_GKI_MODULES_LIST = \[ "drivers\/kernelsu\/kernelsu.ko",/g' common/modules.bzl
+          fi
+        else
+          TARGET_FILE="build/kernel/build.sh"
+          if [ ! -e "$TARGET_FILE" ]; then
+            TARGET_FILE="build/build.sh"
+          fi
+          sed -i 's/needs unknown symbol/Dont abort when unknown symbol/g' $TARGET_FILE || echo "No unknown symbol in $TARGET_FILE"
+          sed -i 's/if ! diff -u "\${KERNEL_DIR}\/\${MODULES_ORDER}" "\${OUT_DIR}\/modules\.order"; then/if false; then/g' $TARGET_FILE
+          sed -i 's@${ROOT_DIR}/build/abi/compare_to_symbol_list@echo@g' $TARGET_FILE
+          sed -i 's/needs unknown symbol/Dont abort when unknown symbol/g' build/kernel/*.sh || echo "No unknown symbol scripts found"
+        fi
+
+    - name: Symbol Magic
+      if: inputs.ENABLE_KSU == true
+      run: |
+        echo "[+] Export all symbol from abi_gki_aarch64.xml"
+        COMMON_ROOT=$GITHUB_WORKSPACE/android-kernel/common
+        KSU_ROOT=$GITHUB_WORKSPACE/android-kernel/KernelSU-Next
+        ABI_XML=$COMMON_ROOT/android/abi_gki_aarch64.xml
+        SYMBOL_LIST=$COMMON_ROOT/android/abi_gki_aarch64
+        # python3 $KSU_ROOT/scripts/abi_gki_all.py $ABI_XML > $SYMBOL_LIST
+        echo "[+] Add KernelSU-Next symbols"
+        cat $KSU_ROOT/kernel/export_symbol.txt | awk '{sub("[ \t]+","");print "  "$0}' >> $SYMBOL_LIST
+        
+    - name: Remove protected symbols
+      working-directory: android-kernel
+      run: rm common/android/abi_gki_protected_exports_* || echo "No protected exports!"
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: gki-kernel-aarch64-${{ inputs.TAG }}
+        max-size: 2G
+
+    - name: Make working directory clean to avoid dirty
+      working-directory: android-kernel
+      run: cd common/ && git add -A && git commit -a -m "Add KernelSU-Next"
+
+    - name: Build Boot/LKM
+      working-directory: android-kernel
+      run: |
+        if [ -e build/build.sh ]; then
+          BUILD_BOOT_IMG=1 SKIP_VENDOR_BOOT=1 KERNEL_BINARY=Image AVB_SIGN_BOOT_IMG=1 AVB_BOOT_PARTITION_SIZE=$((64*1024*1024)) AVB_BOOT_ALGORITHM=SHA256_RSA2048 AVB_BOOT_KEY=prebuilts/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem BOOT_IMAGE_HEADER_VERSION=4 LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang" || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
+        else
+          tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
+        fi
+
     - name: Prepare artifacts
+      if: inputs.BUILD_AS_LKM == false
       run: |
-        OUTDIR=android-kernel/bootimgs/
+        OUTDIR=android-kernel/out/*/dist
+        if [ ! -e $OUTDIR ]; then
+          OUTDIR=android-kernel/dist
+        fi
+        mkdir output
+        cp $OUTDIR/boot.img ./output/
         git clone https://github.com/Kernel-SU/AnyKernel3
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
+
+    - name: Prepare artifacts
+      if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == true
+      run: |
+        mkdir lkm
+        if [ ${{ env.COMPILE_KERNEL }} = "false" ]; then
+          sudo apt-get install fd-find -y
+          fdfind -e ko kernelsu -x cp -f {} ./lkm/
+        else
+          OUTDIR=android-kernel/out/*/dist
+          if [ ! -e $OUTDIR ]; then
+            OUTDIR=android-kernel/dist
+          fi
+          cp $OUTDIR/kernelsu.ko ./lkm/
+        fi
+        llvm-strip-15 -d ./lkm/kernelsu.ko
+
     - name: Upload Boot
+      if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == false
       uses: actions/upload-artifact@v4
       with:
-        name: Boot-${{ github.event.inputs.TAG }}
-        path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot*
+        name: Boot_KernelSU_${{ inputs.TAG }}
+        path: ./output/boot*.img
+
     - name: Upload AnyKernel3
+      if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == false
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3-${{ github.event.inputs.TAG }}
-        path: ./AnyKernel3/*
+          name: AnyKernel3_KernelSU_${{ inputs.TAG }}
+          path: ./AnyKernel3/*
+
+    - name: Upload Boot
+      if: inputs.ENABLE_KSU == false && inputs.BUILD_AS_LKM == false
+      uses: actions/upload-artifact@v4
+      with:
+        name: Boot_Non-KernelSU_${{ inputs.TAG }}
+        path: ./output/boot.img
+
+    - name: Upload AnyKernel3
+      if: inputs.ENABLE_KSU == false && inputs.BUILD_AS_LKM == false
+      uses: actions/upload-artifact@v4
+      with:
+          name: AnyKernel3_Non-KernelSU_${{ inputs.TAG }}
+          path: ./AnyKernel3/*
+
+    - name: Upload LKM
+      if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: LKM_KernelSU_${{ inputs.TAG }}
+        path: ./lkm/kernelsu.ko
