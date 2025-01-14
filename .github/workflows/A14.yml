@@ -168,6 +168,42 @@ jobs:
           tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
         fi
 
+    - name: Download prebuilt toolchain
+      run: |
+        cd $GITHUB_WORKSPACE
+        AOSP_MIRROR=https://android.googlesource.com
+        BRANCH=main-kernel-build-2024
+        # Clone necessary prebuilt tools
+        git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
+        git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
+        git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
+        pip3 install telethon
+        # Export paths to required tools as environment variables
+        export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
+        export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
+        export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
+        export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
+        export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
+        cd android-kernel && mkdir bootimgs
+        cp ./dist/Image ./bootimgs
+        cp ./dist/Image.lz4 ./bootimgs
+        cd ./bootimgs
+        echo 'Building Image.gz'
+        $GZIP -n -k -f -9 Image >Image.gz                
+        echo 'Building boot.img'
+        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot.img ./${{ inputs.TAG }}-boot.img
+        echo 'Building boot-gz.img'
+        $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-gz.img ./${{ inputs.TAG }}-boot-gz.img
+        echo 'Building boot-lz4.img'
+        $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-lz4.img ./${{ inputs.TAG }}-boot-lz4.img
+        cd ..    
+        
     - name: Prepare artifacts
       if: inputs.BUILD_AS_LKM == false
       run: |
@@ -201,14 +237,14 @@ jobs:
       if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == false
       uses: actions/upload-artifact@v4
       with:
-        name: Boot_KernelSU_${{ inputs.TAG }}
-        path: ./output/boot*.img
+        name: Boot_${{ inputs.TAG }}
+        path: ./bootimgs/${{ inputs.TAG }}-boot*
 
     - name: Upload AnyKernel3
       if: inputs.ENABLE_KSU == true && inputs.BUILD_AS_LKM == false
       uses: actions/upload-artifact@v4
       with:
-          name: AnyKernel3_KernelSU_${{ inputs.TAG }}
+          name: AnyKernel3_${{ inputs.TAG }}
           path: ./AnyKernel3/*
 
     - name: Upload Boot
