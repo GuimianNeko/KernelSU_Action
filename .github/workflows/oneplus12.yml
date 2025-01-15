@@ -44,8 +44,8 @@ jobs:
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m oneplus12_v.xml
-        ../git-repo/repo sync -j$(nproc)
+        ../git-repo/repo init --depth=1 --u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m oneplus12_v.xml
+        ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
         
         rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
         cd ./kernel_platform
