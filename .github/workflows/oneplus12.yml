@@ -1,19 +1,31 @@
-name: Build OP12 with KSU
+name: Build OnePlus KSU Kernel
 on:
   workflow_dispatch:
     inputs:
       TAG:
         required: true
-        default: "oneplus12"
-      susfs_version:
+        type: choice
+        description: 'Select Branch'
+        options:
+        - oneplus/sm8650
+        - oneplus/sm7550
+        - oneplus/sm7675
+        - oneplus/sm8550
+        - oneplus/sm8750
+        default: 'oneplus/sm8650'
+      MFT:
         required: true
-        type: string
-        default: "gki-android14-6.1"
-        description: >
-          Set susfs version
+        description: 'Select Manifest'
+        default: 'oneplus12_v'
+      ENABLE_KSU:
+        required: true
+        type: boolean
+        default: true
+        description: 'Enable KernelSU'
 
 jobs:
   build:
+    name: Build OnePlus Kernel - ${{ inputs.TAG }}
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -21,139 +33,111 @@ jobs:
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
     steps:
-    - name: Maximize build space
+    - name: Maximize Build Space
       uses: easimon/maximize-build-space@master
       with:
+        swap-size-mb: 8192
         root-reserve-mb: 8192
         temp-reserve-mb: 2048
         remove-dotnet: 'true'
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
-    - uses: actions/checkout@v4
-    - uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{ github.event.inputs.TAG }}
-        append-timestamp: false
+
     - name: Download Kernel Source
       run: |
+        sudo apt-get remove firefox -y
+        sudo apt-get update
+        sudo apt-get upgrade -y
+        sudo apt-get install repo -y
         cd $GITHUB_WORKSPACE
-        git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
-        git clone https://github.com/TheWildJames/kernel_patches.git
-        git clone https://gerrit.googlesource.com/git-repo
-        git config --global user.name "wizxy"
-        git config --global user.email wizxy@users.noreply.github.com
-        mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init --depth=1 --u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m oneplus12_v.xml
-        ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        
+        git config --global user.name "wstjf"
+        git config --global user.email wstjf@users.noreply.github.com
+        mkdir oneplus12_v && cd oneplus12_v
+        repo init --depth=1 --u https://github.com/OnePlusOSS/kernel_manifest.git -b ${{ inputs.TAG }} -m ${{ inputs.MFT }}.xml --repo-rev=v2.16
+        repo --trace sync -q -c -j$(nproc --all) --no-tags
         rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
-        cd ./kernel_platform
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
-        cd ./KernelSU-Next/kernel
-        sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12000/' ./Makefile
-        cd ../../
-        
-        echo "adding susfs"
-        cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-        cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_${{ inputs.susfs_version }}.patch ./common/
-        cp ../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
-        cp ../../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        cd ./KernelSU-Next/
-        patch -p1 < 10_enable_susfs_for_ksu.patch
-        cd ../common
-        patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch
-        cp $GITHUB_WORKSPACE/kernel_patches/69_hide_stuff.patch ./
-        patch -p1 -F 3 < 69_hide_stuff.patch
-        sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
-        cd ..
-        
-        cp $GITHUB_WORKSPACE/kernel_patches/Makefile_fix.patch ./
-        patch -p1 --fuzz=3 < ./Makefile_fix.patch
-        
-        cp $GITHUB_WORKSPACE/kernel_patches/apk_sign.c_fix.patch ./
-        patch -p1 -F 3 < apk_sign.c_fix.patch
-    
-        cp $GITHUB_WORKSPACE/kernel_patches/core_hook.c_fix.patch ./
-        patch -p1 --fuzz=3 < ./core_hook.c_fix.patch
 
-        cp $GITHUB_WORKSPACE/kernel_patches/selinux.c_fix.patch ./
-        patch -p1 -F 3 < selinux.c_fix.patch
-        
-        echo "Adding configuration settings to gki_defconfig..."
+    - name: Setup KernelSU
+      if: inputs.ENABLE_KSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/oneplus12_v/kernel_platform
+        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU/next/kernel/setup.sh" | bash -s next
+        cd ./KernelSU-Next/kernel
+        #sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
+        cd ../../
+
+    - name: Setup SUSFS
+      if: inputs.ENABLE_KSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/oneplus12_v/kernel_platform
+        git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14-6.1
+        cp ./susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
+        cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
+        cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
+        #cp ./susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
+        #cp ./susfs4ksu/kernel_patches/include/linux/sus_su.h ./common/include/linux/
+        cp ./susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+        cd ./KernelSU-Next/
+        patch -p1 < 10_enable_susfs_for_ksu.patch || true
+        cd ../common
+        patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
+
+    - name: Apply Additional Patches
+      if: inputs.ENABLE_KSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/oneplus12_v/kernel_platform
+        git clone https://github.com/TheWildJames/kernel_patches.git
+        cd common
+        cp ../kernel_patches/69_hide_stuff.patch ./
+        patch -p1 -F 3 < 69_hide_stuff.patch || true
+        #sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
+        cd ..
+        cp ./kernel_patches/selinux.c_fix.patch ./
+        patch -p1 -F 3 < selinux.c_fix.patch || true
+        cp ./kernel_patches/apk_sign.c_fix.patch ./
+        patch -p1 -F 3 < apk_sign.c_fix.patch || true
+        #cp ./kernel_patches/Makefile_fix.patch ./
+        #patch -p1 --fuzz=3 < ./Makefile_fix.patch || true
+        cp ./kernel_patches/core_hook.c_fix.patch ./
+        patch -p1 --fuzz=3 < ./core_hook.c_fix.patch || true
+
+    - name: Configure Kernel
+      if: inputs.ENABLE_KSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/oneplus12_v/kernel_platform
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
-        cd ..
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: oneplus-kernel-${{ inputs.TAG }}
+        max-size: 2G
+
+    - name: Build Kernel
+      run: |
+        cd $GITHUB_WORKSPACE/oneplus12_v
         sed -i '2s/check_defconfig//' ./kernel_platform/common/build.config.gki
-        sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./kernel_platform/build/kernel/kleaf/impl/stamp.bzl
-        sed -i "s/-dirty//g" ./kernel_platform/common/scripts/setlocalversion
-        
-    - name: Build Boot
-      working-directory: android-kernel
-      run: ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
-    - name: Download prebuilt toolchain
+        ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
+
+    - name: Prepare AnyKernel3
       run: |
         cd $GITHUB_WORKSPACE
-        AOSP_MIRROR=https://android.googlesource.com
-        BRANCH=main-kernel-build-2024
-        # Clone necessary prebuilt tools
-        git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
-        git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
-        git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
-        pip3 install telethon
-        # Export paths to required tools as environment variables
-        export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
-        export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
-        export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
-        export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
-        export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
-        cd android-kernel && mkdir bootimgs
-        cp ./out/dist/Image ./bootimgs
-        cp ./out/dist/Image.lz4 ./bootimgs
-        cd ./bootimgs
-        echo 'Building Image.gz'
-        $GZIP -n -k -f -9 Image >Image.gz                
-        echo 'Building boot.img'
-        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        
-        echo 'Building boot-gz.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        
-        echo 'Building boot-lz4.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        
-        cd ..    
-    - name: Prepare artifacts
-      run: |
-        OUTDIR=android-kernel/out/dist/
-        git clone https://github.com/Kernel-SU/AnyKernel3
+        git clone https://github.com/TheWildJames/AnyKernel3.git -b android14-5.15
+        ls ./oneplus12_v/out/dist/
+        cp ./oneplus12_v/out/dist/Image ./AnyKernel3/
         rm -rf ./AnyKernel3/.git
-        cp $OUTDIR/Image ./AnyKernel3/
+
     - name: Upload Boot
       uses: actions/upload-artifact@v4
       with:
-        name: Boot-${{ github.event.inputs.TAG }}
-        path: android-kernel/bootimgs/boot*
+        name: Boot-OnePlus-${{ inputs.MFT }}-KernelSU-SUSFS
+        path: ./oneplus12_v/out/dist/boot.img
+        
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3-${{ github.event.inputs.TAG }}
+        name: OnePlus-${{ inputs.MFT }}-KernelSU-SUSFS
         path: ./AnyKernel3/*
