@@ -64,7 +64,7 @@ jobs:
         cd $GITHUB_WORKSPACE/android-kernel/kernel_platform
         curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
         cd ./KernelSU-Next/kernel
-        #sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
+        sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12293/' ./Makefile
         cd ../../
 
     - name: Setup SUSFS
