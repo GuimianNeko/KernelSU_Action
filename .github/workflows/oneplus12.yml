@@ -91,7 +91,6 @@ jobs:
         patch -p1 -F 3 < 69_hide_stuff.patch || true
         #sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
         cd ..
-        
         cp ./kernel_patches/apk_sign.c_fix.patch ./
         patch -p1 -F 3 < apk_sign.c_fix.patch || true
         cp ./kernel_patches/core_hook.c_fix.patch ./
@@ -107,8 +106,26 @@ jobs:
         cd $GITHUB_WORKSPACE/android-kernel/kernel_platform
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
-
+        
+        sed -i '2s/check_defconfig//' ./common/build.config.gki
+        sed -i "s/-dirty//g" ./common/scripts/setlocalversion
+        sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
+           
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -118,7 +135,6 @@ jobs:
     - name: Build Kernel
       run: |
         cd $GITHUB_WORKSPACE/android-kernel
-        sed -i '2s/check_defconfig//' ./kernel_platform/common/build.config.gki
         ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
     - name: Prepare AnyKernel3
@@ -126,16 +142,17 @@ jobs:
         OUTDIR=android-kernel/out/dist/
         git clone https://github.com/Kernel-SU/AnyKernel3
         rm -rf ./AnyKernel3/.git
+        ls $OUTDIR
         cp $OUTDIR/Image ./AnyKernel3/
 
     - name: Upload Boot
       uses: actions/upload-artifact@v4
       with:
-        name: Boot-OnePlus-${{ inputs.MFT }}-KernelSU-SUSFS
-        path: ./out/dist/boot.img
+        name: Boot-${{ inputs.MFT }}
+        path: android-kernel/out/dist/boot.img
         
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: OnePlus-${{ inputs.MFT }}-KernelSU-SUSFS
+        name: AnyKernel3-${{ inputs.MFT }}
         path: ./AnyKernel3/*
