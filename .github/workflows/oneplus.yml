@@ -129,7 +129,7 @@ jobs:
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "s/-dirty//g" ./common/scripts/setlocalversion
         sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
-        sed -i "\$s/\$res/-android14-11-o-gd44351ca26e5/" ./common/scripts/setlocalversion
+        sed -i "\$s/\$res/\${res%-dirty}/" ./common/scripts/setlocalversion
            
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
