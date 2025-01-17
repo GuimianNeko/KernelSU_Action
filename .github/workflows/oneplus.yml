@@ -17,6 +17,10 @@ on:
         required: true
         description: 'Select Manifest'
         default: 'oneplus12_v'
+      DKSU_VERSION:
+        required: true
+        description: 'Set ksu version'
+        default: '12312'       
       ENABLE_KSU:
         required: true
         type: boolean
@@ -64,7 +68,7 @@ jobs:
         cd $GITHUB_WORKSPACE/android-kernel/kernel_platform
         curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
         cd ./KernelSU-Next/kernel
-        sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12302/' ./Makefile
+        sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=${{ inputs.DKSU_VERSION }}/' ./Makefile
         cd ../../
 
     - name: Setup SUSFS
