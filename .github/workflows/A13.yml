@@ -4,11 +4,11 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android13-5.10-lts"
+        default: "android13-5.15-lts"
       susfs_version:
         required: true
         type: string
-        default: "gki-android13-5.10"
+        default: "gki-android13-5.15"
         description: >
           Set susfs version
 
