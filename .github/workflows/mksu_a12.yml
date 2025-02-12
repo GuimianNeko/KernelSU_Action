@@ -58,11 +58,12 @@ jobs:
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
         curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/main/kernel/setup.sh" | bash -s main
         # Revert commit of remove pts_unix98_lookup_pre
-        cd KernelSU
+        cd ./KernelSU
         git revert -m 1 $(git log --grep="remove devpts hook" --pretty=format:"%h") -n
         KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 12063)
         echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
         sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+        cd ..
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
