@@ -81,13 +81,6 @@ jobs:
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         cd ..
-        cd ./KernelSU-Next
-        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
-        cd ../common
-        patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
-        cp ../../kernel_patches/69_hide_stuff.patch ./
-        patch -p1 -F 3 < 69_hide_stuff.patch
-        cd ..
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
