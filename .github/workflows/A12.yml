@@ -57,15 +57,15 @@ jobs:
         # Verify repo version and sync the kernel source
         ../git-repo/repo --version
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
-        #curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs
+        #curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU-Next
         cp ../../kernel_patches/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./
-        patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
+        #patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
         cd ../common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/new_hooks.patch ./
