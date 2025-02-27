@@ -74,7 +74,7 @@ jobs:
         cd ..
         #echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_COMPAT=n" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_COMPAT=y" >> ./common/arch/arm64/configs/gki_defconfig
         #echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
         #echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
         #echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
