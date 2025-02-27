@@ -11,6 +11,14 @@ on:
         default: "2024-05"
         description: >
           Set Kernel patch level
+      ksun_version:
+        required: true
+        type: choice
+        description: 'Select Branch'
+        options:
+        - next
+        - next-susfs
+        default: 'next'
 
 jobs:
   build:
@@ -57,8 +65,7 @@ jobs:
         # Verify repo version and sync the kernel source
         ../git-repo/repo --version
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        #curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs
+        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/${{ inputs.ksun_version }}/kernel/setup.sh" | bash -s ${{ inputs.ksun_version }}
         cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
