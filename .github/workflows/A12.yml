@@ -71,8 +71,10 @@ jobs:
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU-Next
-        cp ../../kernel_patches/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./
-        #patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
+        if [ "${{ inputs.ksun_version }}" == "next" ]; then
+          cp ../../kernel_patches/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./
+          patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
+        fi
         cd ../common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/new_hooks.patch ./
