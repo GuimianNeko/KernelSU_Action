@@ -68,6 +68,11 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
+        cp ../../kernel_patches/new_hooks.patch ./
+        patch -p1 -F 3 < new_hooks.patch
+        cd ../KernelSU
+        chmod 777 mksu_susfs_vfs_fix.sh
+        ./mksu_susfs_vfs_fix.sh
         cd ..
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
