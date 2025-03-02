@@ -13,9 +13,12 @@ on:
           Set Kernel patch level
       manual_vfs_hook:
         required: true
-        type: boolean
-        default: false
-        description: 'Enable manual vfs hook'
+        type: choice
+        description: 'Select manual vfs hook'
+        options:
+        - enable
+        - disable
+        default: 'enable'
 
 jobs:
   build:
@@ -73,7 +76,7 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        if inputs.manual_vfs_hook; then
+        if [[ "${{ inputs.manual_vfs_hook }}" == "enable" ]]; then
           cp ../../kernel_patches/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
           cd ../KernelSU
