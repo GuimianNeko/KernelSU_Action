@@ -62,17 +62,14 @@ jobs:
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU
-        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
-        patch -p1 < mksu_susfs_fix.patch || true
+        cp ./patch/* ./
+        patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
         cd ../common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         cp ../../kernel_patches/new_hooks.patch ./
         patch -p1 -F 3 < new_hooks.patch
-        cd ../KernelSU
-        chmod 777 mksu_susfs_vfs_fix.sh
-        ./mksu_susfs_vfs_fix.sh
         cd ..
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
