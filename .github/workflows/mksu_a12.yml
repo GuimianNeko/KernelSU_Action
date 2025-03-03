@@ -18,7 +18,7 @@ on:
         options:
         - enable
         - disable
-        default: 'enable'
+        default: 'disable'
 
 jobs:
   build:
