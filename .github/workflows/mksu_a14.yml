@@ -1,0 +1,194 @@
+name: Build GKI A14 with MKSU
+on:
+  workflow_dispatch:
+    inputs:
+      TAG:
+        required: true
+        default: "android14-6.1-lts"
+      susfs_version:
+        required: true
+        type: string
+        default: "gki-android14-6.1"
+        description: >
+          Set susfs version
+      ENABLE_MKSU:
+        required: true
+        type: boolean
+        default: true
+        description: 'Enable MKSU'
+
+jobs:
+  build:
+    name: Build ${{ inputs.TAG }}
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_MAXSIZE: "2G"
+      CCACHE_HARDLINK: "true"
+    steps:
+    - name: Maximize Build Space
+      uses: easimon/maximize-build-space@master
+      with:
+        swap-size-mb: 8192
+        root-reserve-mb: 8192
+        temp-reserve-mb: 2048
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+
+    - name: Download Kernel Source
+      run: |
+        sudo apt-get remove firefox -y
+        sudo apt-get update
+        sudo apt-get upgrade -y
+        sudo apt-get install repo -y
+        cd $GITHUB_WORKSPACE
+        git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
+        git clone https://github.com/TheWildJames/kernel_patches.git
+        git config --global user.name "wizxy"
+        git config --global user.email wizxy@users.noreply.github.com
+        mkdir android-kernel && cd android-kernel
+        repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ inputs.TAG }} --repo-rev=v2.16
+        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ inputs.TAG }})
+        DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
+        if grep -q deprecated <<< $REMOTE_BRANCH; then
+          echo "Found deprecated branch: ${{ inputs.TAG }}"
+          sed -i 's/"${{ inputs.TAG }}"/"deprecated\/${{ inputs.TAG }}"/g' $DEFAULT_MANIFEST_PATH
+        fi
+        repo --trace sync -q -c -j$(nproc --all) --no-tags
+
+    - name: Setup KernelSU
+      if: inputs.ENABLE_MKSU == true
+      run: |
+        cd $GITHUB_WORKSPACE/android-kernel
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s susfs
+        cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
+        cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
+        cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+        cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+        cd ./KernelSU
+        cp ./patch/* ./
+        patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        cd ../common
+        patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
+        cp ../../kernel_patches/69_hide_stuff.patch ./
+        patch -p1 -F 3 < 69_hide_stuff.patch
+        cd ..
+        echo "Adding configuration settings to gki_defconfig..."
+        echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_WITH_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        sed -i '2s/check_defconfig//' ./common/build.config.gki
+      
+    - name: Remove protected symbols
+      working-directory: android-kernel
+      run: rm common/android/abi_gki_protected_exports_* || echo "No protected exports!"
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: gki-kernel-aarch64-${{ inputs.TAG }}
+        max-size: 2G
+
+    - name: Make working directory clean to avoid dirty
+      working-directory: android-kernel
+      run: cd common/ && git add -A && git commit -a -m "Add KernelSU"
+
+    - name: Build Boot
+      working-directory: android-kernel
+      run: |
+        tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
+
+    - name: Download prebuilt toolchain
+      run: |
+        cd $GITHUB_WORKSPACE
+        AOSP_MIRROR=https://android.googlesource.com
+        BRANCH=main-kernel-build-2024
+        # Clone necessary prebuilt tools
+        git clone $AOSP_MIRROR/platform/prebuilts/build-tools -b $BRANCH --depth 1 build-tools
+        git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
+        git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
+        pip3 install telethon
+        # Export paths to required tools as environment variables
+        export AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool
+        export GZIP=$GITHUB_WORKSPACE/build-tools/path/linux-x86/gzip
+        export LZ4=$GITHUB_WORKSPACE/build-tools/path/linux-x86/lz4
+        export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
+        export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
+        cd android-kernel && mkdir bootimgs
+        cp ./dist/Image ./bootimgs
+        cp ./dist/Image.lz4 ./bootimgs
+        cd ./bootimgs
+        echo 'Building Image.gz'
+        $GZIP -n -k -f -9 Image >Image.gz                
+        echo 'Building boot.img'
+        $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot.img ./${{ inputs.TAG }}-boot.img
+        echo 'Building boot-gz.img'
+        $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-gz.img ./${{ inputs.TAG }}-boot-gz.img
+        echo 'Building boot-lz4.img'
+        $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
+        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
+        cp ./boot-lz4.img ./${{ inputs.TAG }}-boot-lz4.img
+        cd ..    
+        
+    - name: Prepare artifacts
+      if: inputs.ENABLE_MKSU == true
+      run: |
+        OUTDIR=android-kernel/out/*/dist
+        if [ ! -e $OUTDIR ]; then
+          OUTDIR=android-kernel/dist
+        fi
+        mkdir output
+        cp $OUTDIR/boot.img ./output/
+        git clone https://github.com/Kernel-SU/AnyKernel3
+        rm -rf ./AnyKernel3/.git
+        cp $OUTDIR/Image ./AnyKernel3/
+
+    - name: Upload Boot
+      if: inputs.ENABLE_MKSU == true
+      uses: actions/upload-artifact@v4
+      with:
+        name: Boot_${{ inputs.TAG }}
+        path: android-kernel/bootimgs/${{ inputs.TAG }}-boot*
+
+    - name: Upload AnyKernel3
+      if: inputs.ENABLE_MKSU == true
+      uses: actions/upload-artifact@v4
+      with:
+          name: AnyKernel3_${{ inputs.TAG }}
+          path: ./AnyKernel3/*
+
+    - name: Upload Boot
+      if: inputs.ENABLE_MKSU == false
+      uses: actions/upload-artifact@v4
+      with:
+        name: Boot_Non-KernelSU_${{ inputs.TAG }}
+        path: ./output/boot.img
+
+    - name: Upload AnyKernel3
+      if: inputs.ENABLE_MKSU == false
+      uses: actions/upload-artifact@v4
+      with:
+          name: AnyKernel3_Non-KernelSU_${{ inputs.TAG }}
+          path: ./AnyKernel3/*
