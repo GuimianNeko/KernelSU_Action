@@ -37,6 +37,12 @@ jobs:
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
+        
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: gki-kernel-aarch64-${{ inputs.TAG }}
+        max-size: 2G
 
     - name: Download Kernel Source
       run: |
@@ -100,12 +106,6 @@ jobs:
     - name: Remove protected symbols
       working-directory: android-kernel
       run: rm common/android/abi_gki_protected_exports_* || echo "No protected exports!"
-
-    - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: gki-kernel-aarch64-${{ inputs.TAG }}
-        max-size: 2G
 
     - name: Make working directory clean to avoid dirty
       working-directory: android-kernel
