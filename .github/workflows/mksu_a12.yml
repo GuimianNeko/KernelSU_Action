@@ -16,9 +16,10 @@ on:
         type: choice
         description: 'Select manual vfs hook'
         options:
-        - enable
+        - newhook
+        - ksuhook
         - disable
-        default: 'disable'
+        default: 'newhook'
       mksu_branch:
         required: true
         type: choice
@@ -85,7 +86,13 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        if [[ "${{ inputs.manual_vfs_hook }}" == "enable" ]]; then
+        if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
+          cp ../../kernel_patches/hooks/new_hooks.patch ./
+          patch -p1 -F 3 < new_hooks.patch
+          cd ..
+          echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
+        elif [[ "${{ inputs.manual_vfs_hook }}" == "ksuhook" ]]; then
           cp ../../kernel_patches/hooks/ksu_hooks.patch ./
           patch -p1 -F 3 < ksu_hooks.patch
           cd ..
