@@ -62,9 +62,6 @@ jobs:
 
     - name: Download Kernel Source
       run: |
-        sudo apt-get remove firefox -y
-        sudo apt-get update
-        sudo apt-get upgrade -y
         sudo apt-get install repo -y
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
