@@ -19,6 +19,14 @@ on:
         - enable
         - disable
         default: 'disable'
+      mksu_branch:
+        required: true
+        type: choice
+        description: 'Select mksu branch'
+        options:
+        - susfs
+        - susfs_patch
+        default: 'susfs_patch'
 
 jobs:
   build:
@@ -64,33 +72,22 @@ jobs:
         # Verify repo version and sync the kernel source
         ../git-repo/repo --version
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s susfs
-        cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU
-        cp ./patch/* ./
-        patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        if [[ "${{ inputs.mksu_branch }}" == "susfs" ]]; then
+          cp ./patch/* ./
+          patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        fi
         cd ../common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "enable" ]]; then
-          cp ../../kernel_patches/hooks/new_hooks.patch ./
-          patch -p1 -F 3 < new_hooks.patch
-          cd ../KernelSU
-          sed -i '/#include "selinux\/selinux.h"/a\
-          bool ksu_vfs_read_hook = true;\n\
-          bool ksu_execveat_hook = true;\n\
-          bool ksu_input_hook = true;\n\
-          EXPORT_SYMBOL(ksu_vfs_read_hook);\n\
-          EXPORT_SYMBOL(ksu_execveat_hook);\n\
-          EXPORT_SYMBOL(ksu_input_hook);' ./kernel/ksud.c
-          sed -i '/#include <linux\/types.h>/a\
-          extern bool ksu_vfs_read_hook;\n\
-          extern bool ksu_execveat_hook;\n\
-          extern bool ksu_input_hook;' ./kernel/ksud.h
+          cp ../../kernel_patches/hooks/ksu_hooks.patch ./
+          patch -p1 -F 3 < ksu_hooks.patch
           cd ..
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
         else
@@ -99,6 +96,7 @@ jobs:
         fi
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_WITH_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
