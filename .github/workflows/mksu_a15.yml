@@ -152,6 +152,7 @@ jobs:
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
+        sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "6.6.66-android15-8-geae86f166c48-abogki367569362-4K"|' ./common/scripts/setlocalversion
       
     - name: Remove protected symbols
       working-directory: android-kernel
