@@ -16,6 +16,14 @@ on:
         type: boolean
         default: true
         description: 'Enable MKSU'
+      mksu_branch:
+        required: true
+        type: choice
+        description: 'Select mksu branch'
+        options:
+        - susfs
+        - susfs_patch
+        default: 'susfs_patch'
       manual_vfs_hook:
         required: true
         type: choice
@@ -77,11 +85,16 @@ jobs:
       if: inputs.ENABLE_MKSU == true
       run: |
         cd $GITHUB_WORKSPACE/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s susfs_patch
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_${{ inputs.susfs_version }}.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        cd ./common
+        cd ./KernelSU
+        if [[ "${{ inputs.mksu_branch }}" == "susfs" ]]; then
+          cp ./patch/* ./
+          patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        fi
+        cd ../common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
