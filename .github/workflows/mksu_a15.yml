@@ -95,8 +95,6 @@ jobs:
           cd ..
           echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         fi
-        echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_WITH_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
