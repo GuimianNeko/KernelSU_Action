@@ -16,6 +16,14 @@ on:
         type: boolean
         default: true
         description: 'Enable MKSU'
+      manual_vfs_hook:
+        required: true
+        type: choice
+        description: 'Select manual vfs hook'
+        options:
+        - enable
+        - disable
+        default: 'disable'
 
 jobs:
   build:
@@ -77,8 +85,16 @@ jobs:
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        cp ../../kernel_patches/hooks/ksu_hooks.patch ./
-        patch -p1 -F 3 < ksu_hooks.patch
+        if [[ "${{ inputs.manual_vfs_hook }}" == "enable" ]]; then
+          cp ../../kernel_patches/hooks/ksu_hooks.patch ./
+          patch -p1 -F 3 < ksu_hooks.patch
+          cd ..
+          echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
+        else
+          cd ..
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        fi
         cd ..
         echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
