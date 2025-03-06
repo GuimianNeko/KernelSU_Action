@@ -4,7 +4,7 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android14-6.1-lts"
+        default: "android14-6.1-2024-11"
       susfs_version:
         required: true
         type: string
@@ -16,6 +16,22 @@ on:
         type: boolean
         default: true
         description: 'Enable MKSU'
+      mksu_branch:
+        required: true
+        type: choice
+        description: 'Select mksu branch'
+        options:
+        - susfs
+        - susfs_patch
+        default: 'susfs_patch'
+      manual_vfs_hook:
+        required: true
+        type: choice
+        description: 'Select manual vfs hook'
+        options:
+        - ksuhook
+        - newhook
+        default: 'newhook'
 
 jobs:
   build:
@@ -69,19 +85,35 @@ jobs:
       if: inputs.ENABLE_MKSU == true
       run: |
         cd $GITHUB_WORKSPACE/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s susfs
-        cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_${{ inputs.susfs_version }}.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU
-        cp ./patch/* ./
-        patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        if [[ "${{ inputs.mksu_branch }}" == "susfs" ]]; then
+          cp ./patch/* ./
+          patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+        fi
         cd ../common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        cd ..
+        if [[ "${{ inputs.manual_vfs_hook }}" == "ksuhook" ]]; then
+          cp ../../kernel_patches/hooks/ksu_hooks.patch ./
+          patch -p1 -F 3 < ksu_hooks.patch
+          cd ..
+          echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
+        elif [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
+          cp ../../kernel_patches/hooks/new_hooks.patch ./
+          patch -p1 -F 3 < new_hooks.patch
+          cd ..
+          echo "CONFIG_KSU_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
+        else
+          cd ..
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        fi
         echo "Adding configuration settings to gki_defconfig..."
         echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_WITH_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -100,8 +132,16 @@ jobs:
         echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
+        # Add additional tmpfs config setting
+        echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/gki_defconfig
+        # Add additional config setting
+        echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
+
         sed -i '2s/check_defconfig//' ./common/build.config.gki
+        sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "$6.6.66-android15-8-geae86f166c48-abogki367569362-4K"|' ./common/scripts/setlocalversion
       
     - name: Remove protected symbols
       working-directory: android-kernel
