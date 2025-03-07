@@ -1,4 +1,4 @@
-name: Build MKSU OnePlus Kernel
+name: Build OKI with MKSU
 on:
   workflow_dispatch:
     inputs:
