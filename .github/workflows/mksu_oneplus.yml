@@ -59,7 +59,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    name: Build ${{ inputs.FEIL }}
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
