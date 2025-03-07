@@ -42,16 +42,20 @@ on:
           - susfs
           - susfs_patch
         default: susfs_patch
+      VFS_patch_ENABLED:
+        description: "是否添加vfs补丁"
+        required: true
+        type: choice
+        options:
+          - enable
+          - disable
+        default: enable
       SUSFS_ENABLED:
         description: "添加susfs补丁"
         required: true
         type: boolean
         default: true
-      VFS_patch_ENABLED:
-        description: "添加vfs补丁"
-        required: true
-        type: boolean
-        default: true
+      
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -151,7 +155,7 @@ jobs:
           echo "CONFIG_KSU=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
 
           # Add VFS configuration settings
-          if [[ "${github_event_inputs_VFS_patch_ENABLED}" == 'true' ]]; then
+          if [[ "${github_event_inputs_VFS_patch_ENABLED}" == 'enable' ]]; then
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_HOOK=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_WITH_KPROBES=n" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
