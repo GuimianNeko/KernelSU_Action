@@ -1,4 +1,4 @@
-name: Build Mksu OnePlus_Kernel 
+name: Build OnePlus with mksu
 on:
   workflow_dispatch:
     inputs:
