@@ -1,4 +1,4 @@
-name: Build MKSU OnePlus
+name: Build MKSU OnePlus Kernel
 on:
   workflow_dispatch:
     inputs:
@@ -31,11 +31,11 @@ on:
           - no
         default: no
       KERNEL_NAME:
-        description: "修改内核名称"
+        description: "自定义内核名称"
         required: true
         default: '-android14-11-o-g1132d864665d'
       kernelsu_variant:
-        description: "选择 KSU"
+        description: "选择KSU"
         required: true
         type: choice
         options:
@@ -43,19 +43,13 @@ on:
           - MKSU-SKN
         default: MKSU-SKN
       kernelsu_version:
-        description: "选择 KSU 版本"
+        description: "选择KSU版本"
         required: true
         type: choice
         options:
-          - without ksu
-          - tag
-          - main
-        default: main
-      SUSFS_ENABLED:
-        description: "添加 SUSFS"
-        required: true
-        type: boolean
-        default: true
+          - susfs
+          - susfs_patch
+        default: susfs_patch
       VFS_patch_ENABLED:
         description: "添加vfs补丁（新钩子）？"
         required: true
@@ -105,9 +99,9 @@ jobs:
       - name: KernelSU & MKSU-SKN version
         if: ${{ github.event.inputs.kernelsu_variant == 'Official' || github.event.inputs.kernelsu_variant == 'MKSU-SKN' }}
         run: |
-          if [[ "${{ github.event.inputs.kernelsu_version }}" == "tag" ]]; then
-            echo "BRANCH=-" >> $GITHUB_ENV
-          elif [[ "${{ github.event.inputs.kernelsu_version }}" == "main" ]]; then
+          if [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs" ]]; then
+            echo "BRANCH=-s susfs" >> $GITHUB_ENV
+          elif [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs_patch" ]]; then
             echo "BRANCH=-s susfs_patch" >> $GITHUB_ENV
           fi
           
@@ -177,7 +171,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=n" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> kernel_workspace/kernel_platform/common/arch/arm64/configs/gki_defconfig
