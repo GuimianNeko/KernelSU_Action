@@ -22,36 +22,33 @@ on:
         description: "内核版本"
         required: true
         default: '6.1'
-      Custom_kernel_names:
+      custom_kernel_name:
         description: "是否自定义内核名字？"
         required: true
         type: choice
         options:
-          - yes
-          - no
-        default: no
+          - enable
+          - disable
+        default: disable
       KERNEL_NAME:
         description: "自定义内核名称"
         required: true
         default: '-android14-11-o-g1132d864665d'
-      kernelsu_variant:
-        description: "选择KSU"
-        required: true
-        type: choice
-        options:
-          - Kernel
-          - MKSU-SKN
-        default: MKSU-SKN
       kernelsu_version:
-        description: "选择KSU版本"
+        description: "选择MKSU版本"
         required: true
         type: choice
         options:
           - susfs
           - susfs_patch
         default: susfs_patch
+      SUSFS_ENABLED:
+        description: "添加susfs补丁"
+        required: true
+        type: boolean
+        default: true
       VFS_patch_ENABLED:
-        description: "添加vfs补丁（新钩子）？"
+        description: "添加vfs补丁"
         required: true
         type: boolean
         default: true
@@ -97,7 +94,6 @@ jobs:
          sed -i 's/ -dirty//g' kernel_platform/msm-kernel/scripts/setlocalversion
       
       - name: KernelSU & MKSU-SKN version
-        if: ${{ github.event.inputs.kernelsu_variant == 'Official' || github.event.inputs.kernelsu_variant == 'MKSU-SKN' }}
         run: |
           if [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs" ]]; then
             echo "BRANCH=-s susfs" >> $GITHUB_ENV
@@ -106,7 +102,6 @@ jobs:
           fi
           
       - name: Add KernelSU-MKSU-SKN
-        if: ${{ github.event.inputs.kernelsu_variant == 'MKSU-SKN' }}
         run: |
           cd kernel_workspace/kernel_platform
           curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash ${{ env.BRANCH }}
@@ -116,7 +111,7 @@ jobs:
           sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
           
       - name: Apply SUSFS Patches MKSU-SKN
-        if: ${{ (inputs.kernelsu_variant == 'MKSU-SKN') && github.event.inputs.SUSFS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.SUSFS_ENABLED == 'true' }}
         run: |
           cd kernel_workspace
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}
@@ -187,7 +182,7 @@ jobs:
       - name: Add make name
         run: |
          cd kernel_workspace/kernel_platform
-         if [[ "${{ inputs.Custom_kernel_names }}" == "yes" ]]; then
+         if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
            sed -i '$s|echo "\$res"|echo "\${{ github.event.inputs.KERNEL_NAME }}"|' ./common/scripts/setlocalversion
          else
            sed -i "\$s/\$res/\${res%-dirty}/" ./common/scripts/setlocalversion
