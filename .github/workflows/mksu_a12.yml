@@ -78,7 +78,7 @@ jobs:
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU
-        if [[ "${{ inputs.mksu_branch }}" == "susfs" ]]; then
+        if [[ "${{ inputs.mksu_branch }}" == "main" ]]; then
           cp ./patch/* ./
           patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
         fi
