@@ -9,7 +9,7 @@ on:
       FEIL:
         description: "配置文件"
         required: true
-        default: 'oneplus_ace3_pro_v'
+        default: 'oneplus_pad2_v'
       CPUD:
         description: "处理器代号"
         required: true
@@ -39,9 +39,9 @@ on:
         required: true
         type: choice
         options:
-          - susfs
-          - susfs_patch
-        default: susfs_patch
+          - main
+          - susfs-dev
+        default: susfs-dev
       VFS_patch_ENABLED:
         description: "是否添加vfs补丁"
         required: true
@@ -110,7 +110,7 @@ jobs:
           cd kernel_workspace/kernel_platform
           curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash ${{ env.BRANCH }}
           cd ./KernelSU
-          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10200)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10600)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
           
