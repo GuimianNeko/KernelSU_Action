@@ -99,10 +99,10 @@ jobs:
       
       - name: KernelSU & MKSU-SKN version
         run: |
-          if [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs" ]]; then
-            echo "BRANCH=-s susfs" >> $GITHUB_ENV
-          elif [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs_patch" ]]; then
-            echo "BRANCH=-s susfs_patch" >> $GITHUB_ENV
+          if [[ "${{ github.event.inputs.kernelsu_version }}" == "main" ]]; then
+            echo "BRANCH=-s main" >> $GITHUB_ENV
+          elif [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs-dev" ]]; then
+            echo "BRANCH=-s susfs-dev" >> $GITHUB_ENV
           fi
           
       - name: Add KernelSU-MKSU-SKN
