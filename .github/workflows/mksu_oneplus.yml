@@ -108,7 +108,7 @@ jobs:
       - name: Add KernelSU-MKSU-SKN
         run: |
           cd kernel_workspace/kernel_platform
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash ${{ env.BRANCH }}
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash ${{ env.BRANCH }}
           cd ./KernelSU
           KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" 10600)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
@@ -129,7 +129,7 @@ jobs:
           
           echo "正在给内核打susfs补丁"
           cd ./KernelSU
-          if [[ "${{ github.event.inputs.kernelsu_version }}" == "susfs" ]]; then
+          if [[ "${{ github.event.inputs.kernelsu_version }}" == "main" ]]; then
             cp ./patch/* ./
             patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
           fi
