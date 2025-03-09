@@ -25,9 +25,9 @@ on:
         type: choice
         description: 'Select mksu branch'
         options:
-        - susfs
-        - susfs_patch
-        default: 'susfs_patch'
+        - main
+        - susfs-dev
+        default: 'susfs-dev'
 
 jobs:
   build:
@@ -73,7 +73,7 @@ jobs:
         # Verify repo version and sync the kernel source
         ../git-repo/repo --version
         ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/susfs/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
