@@ -201,21 +201,20 @@ jobs:
         if: github.event.inputs.CPU == 'sm8650' 
         run: |
           cd kernel_workspace
-          ./kernel_platform/build_with_bazel.py -t ${{ github.event.inputs.CPUD }} gki
+          ./kernel_platform/build_with_bazel.py -t ${{ github.event.inputs.CPUD }} gki thin
          
       - name: Fallback build kernel
         if: github.event.inputs.CPU != 'sm8650' 
         run: |
           cd kernel_workspace
-          LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki
-          if [[ "${{ inputs.CPU }}" == "sm8475" ]]; then
-          LTO=thin ./kernel_platform/oplus/build/oplus_rebuild_img.sh waipio gki
-          fi
+          ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki thin
      
       - name: Make AnyKernel3
         run: |
           git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
+          ls kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/
+          ls kernel_workspace/out/dist/
           cp kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/Image ./AnyKernel3/
           cp kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/boot.img ./kernel_workspace/
           cp kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/Image ./kernel_workspace/kernel
