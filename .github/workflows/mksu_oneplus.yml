@@ -196,7 +196,6 @@ jobs:
           else
             sed -i "\$s/\$res/\${res%-dirty}/" ./common/scripts/setlocalversion
           fi
-          #sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
   
       - name: Build kernel
         if: github.event.inputs.CPU == 'sm8650' 
@@ -209,7 +208,10 @@ jobs:
         run: |
           cd kernel_workspace
           LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki
-         
+          if [[ "${{ inputs.CPU }}" == "sm8475" ]]; then
+          LTO=thin ./kernel_platform/oplus/build/oplus_rebuild_img.sh waipio gki
+          fi
+     
       - name: Make AnyKernel3
         run: |
           git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
