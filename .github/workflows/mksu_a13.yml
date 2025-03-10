@@ -50,8 +50,8 @@ jobs:
     - uses: actions/checkout@v4
     - uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ${{ inputs.TAG }}
-        append-timestamp: false
+        key: gki-kernel-aarch64-${{ inputs.TAG }}
+        max-size: 2G
     - name: Download Kernel Source
       run: |
         cd $GITHUB_WORKSPACE
@@ -152,7 +152,7 @@ jobs:
         sed -i "s/-dirty//g" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
-      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang"
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
