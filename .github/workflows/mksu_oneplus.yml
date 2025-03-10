@@ -196,7 +196,7 @@ jobs:
           else
             sed -i "\$s/\$res/\${res%-dirty}/" ./common/scripts/setlocalversion
           fi
-          sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
+          #sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
   
       - name: Build kernel
         if: github.event.inputs.CPU == 'sm8650' 
