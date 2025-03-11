@@ -152,6 +152,20 @@ jobs:
           cp ../../kernel_patches/hooks/new_hooks.patch ./
           echo "正在打vfs补丁"
           patch -p1 -F 3 < new_hooks.patch
+          if [[ "${{ github.event.inputs.kernelsu_version }}" == "main" ]]; then
+            cd ../KernelSU
+            sed -i '/#include "selinux\/selinux.h"/a\
+            bool ksu_vfs_read_hook = true;\n\
+            bool ksu_execveat_hook = true;\n\
+            bool ksu_input_hook = false;\n\
+            EXPORT_SYMBOL(ksu_vfs_read_hook);\n\
+            EXPORT_SYMBOL(ksu_execveat_hook);\n\
+            EXPORT_SYMBOL(ksu_input_hook);' ./kernel/ksud.c
+            sed -i '/#include <linux\/types.h>/a\
+            extern bool ksu_vfs_read_hook;\n\
+            extern bool ksu_execveat_hook;\n\
+            extern bool ksu_input_hook;' ./kernel/ksud.h
+          fi
           echo "完成"
 
       - name: Add SUSFS Configuration Settings
@@ -213,7 +227,6 @@ jobs:
         run: |
           git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
-          ls kernel_workspace/out/dist/
           if [[ "${{ inputs.CPUD }}" == "waipio" ]]; then
             cp kernel_workspace/kernel_platform/out/msm-waipio-${{ github.event.inputs.CPUD }}-gki/dist/Image ./AnyKernel3/
             cp kernel_workspace/kernel_platform/out/msm-waipio-${{ github.event.inputs.CPUD }}-gki/dist/boot.img ./kernel_workspace/
