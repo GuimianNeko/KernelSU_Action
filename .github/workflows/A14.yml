@@ -153,9 +153,9 @@ jobs:
         key: gki-kernel-aarch64-${{ inputs.TAG }}
         max-size: 2G
 
-    #- name: Make working directory clean to avoid dirty
-    #  working-directory: android-kernel
-    #  run: cd common/ && git add -A && git commit -a -m "Add KernelSU-Next"
+    - name: Make working directory clean to avoid dirty
+      working-directory: android-kernel
+      run: cd common/ && git add -A && git commit -a -m "Add KernelSU-Next"
 
     - name: Build Boot/LKM
       working-directory: android-kernel
