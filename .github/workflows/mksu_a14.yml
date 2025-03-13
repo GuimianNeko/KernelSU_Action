@@ -32,6 +32,18 @@ on:
         - newhook
         - disable
         default: 'newhook'
+      custom_kernel_name:
+        description: "是否自定义内核名字？"
+        required: true
+        type: choice
+        options:
+          - enable
+          - disable
+        default: enable
+      kernel_name:
+        description: "自定义内核名称"
+        required: true
+        default: '-android14-11-g1132d864665d'
 
 jobs:
   build:
@@ -144,6 +156,9 @@ jobs:
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
+        if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
+          sed -i '$s|echo "\$res"|echo "\${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
+        fi
       
     - name: Remove protected symbols
       working-directory: android-kernel
