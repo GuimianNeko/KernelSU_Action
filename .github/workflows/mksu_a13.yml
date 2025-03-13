@@ -79,7 +79,7 @@ jobs:
         cd ./KernelSU
         if [[ "${{ inputs.mksu_branch }}" == "main" ]]; then
           cp ./patch/* ./
-          patch --fuzz=3 -p1 < MKSU-SKN_susfs.patch || true
+          patch --fuzz=3 -p1 < sukisu_susfs.patch || true
         fi
         cd ../common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
