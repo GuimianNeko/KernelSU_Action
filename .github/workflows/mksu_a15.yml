@@ -43,7 +43,7 @@ on:
       kernel_name:
         description: "自定义内核名称"
         required: true
-        default: '6.6.77-android15-8-geae86f166c48-abogki367569362-4K'
+        default: '6.6.77-android15-8-geae86f166c48-abogki367569362-4k'
 
 jobs:
   build:
