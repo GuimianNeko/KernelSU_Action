@@ -4,7 +4,7 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android15-6.6-2025-02"
+        default: "android15-6.6-2025-03"
       susfs_version:
         required: true
         type: string
