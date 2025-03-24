@@ -188,6 +188,7 @@ jobs:
         else
           echo "LOCALVERSION=" >> $GITHUB_ENV
         fi
+        cd $GITHUB_WORKSPACE/kernel_workspace
         git clone https://github.com/ShirkNeko/SukiSU_patch.git
         cd ./android-kernel
         cp ..SukiSU_patch/4.19/ksu_hooks_sukisu_4.19.patch ./
