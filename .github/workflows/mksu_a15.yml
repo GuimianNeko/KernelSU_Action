@@ -89,7 +89,7 @@ jobs:
           sed -i 's/"${{ inputs.TAG }}"/"deprecated\/${{ inputs.TAG }}"/g' $DEFAULT_MANIFEST_PATH
         fi
         repo --trace sync -q -c -j$(nproc --all) --no-tags
-         
+        
     - name: Setup KernelSU
       if: inputs.ENABLE_MKSU == true
       run: |
