@@ -216,7 +216,6 @@ jobs:
         $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot-gz.img ./${{ inputs.TAG }}-boot-gz.img
-        cd ..
         
     - name: Prepare artifacts
       if: inputs.ENABLE_MKSU == true
@@ -226,7 +225,7 @@ jobs:
           OUTDIR=android-kernel/dist
         fi
         mkdir output
-        cp $OUTDIR/boot.img ./output/
+        cp android-kernel/bootimgs/boot.img ./output/
         git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
