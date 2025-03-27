@@ -39,6 +39,7 @@ jobs:
     - name: Download Kernel Source
       run: |
         cd $GITHUB_WORKSPACE
+        sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/TheWildJames/kernel_patches.git
         git clone https://gerrit.googlesource.com/git-repo
@@ -91,7 +92,25 @@ jobs:
         sed -i "\$s/\$res/-android12-9-00085-g226a9632f13d-ab11136126/" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
-      run: CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+      run: |
+        #CCACHE="/usr/bin/ccache" LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+        mkdir clang
+        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/12.0.1-20230207-release/Clang-12.0.1-20230207.tar.gz
+        tar -C clang/ -zxvf clang.tar.gz
+        export PATH=$GITHUB_WORKSPACE/android-kernel/clang/bin:$PATH
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
+        cd common
+        make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out gki_defconfig
+        scripts/config --file out/.config \
+          -e LTO_CLANG \
+          -d LTO_NONE \
+          -e LTO_CLANG_THIN \
+          -d LTO_CLANG_FULL \
+          -e THINLTO
+        make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out -j$(nproc)
+        cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
+
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -109,8 +128,8 @@ jobs:
         export MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py
         export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
         cd android-kernel && mkdir bootimgs
-        cp ./out/*/dist/Image ./bootimgs
-        cp ./out/*/dist/Image.lz4 ./bootimgs
+        cp ./dist/Image ./bootimgs
+        cp ./dist/Image.gz ./bootimgs
         cd ./bootimgs
         GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-${{ inputs.TAG }}_r1.zip
         FALLBACK_URL=https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2024-01_r1.zip
@@ -123,9 +142,7 @@ jobs:
         fi
         unzip gki-kernel.zip && rm gki-kernel.zip
         echo 'Unpack prebuilt boot.img'
-        $UNPACK_BOOTIMG --boot_img="./boot-5.10.img"       
-        echo 'Building Image.gz'
-        $GZIP -n -k -f -9 Image >Image.gz                
+        $UNPACK_BOOTIMG --boot_img="./boot-5.10.img"              
         echo 'Building boot.img'
         $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
@@ -134,14 +151,10 @@ jobs:
         $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot-gz.img ./${{ inputs.TAG }}-boot-gz.img
-        echo 'Building boot-lz4.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        cp ./boot-lz4.img ./${{ inputs.TAG }}-boot-lz4.img
-        cd ..    
+        
     - name: Prepare artifacts
       run: |
-        OUTDIR=android-kernel/out/*/dist/
+        OUTDIR=android-kernel/dist/
         git clone https://github.com/Kernel-SU/AnyKernel3
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
