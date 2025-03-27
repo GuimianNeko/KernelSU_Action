@@ -57,6 +57,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/TheWildJames/kernel_patches.git
+        git clone https://github.com/ShirkNeko/SukiSU_patch.git
         git clone https://gerrit.googlesource.com/git-repo
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
@@ -76,6 +77,9 @@ jobs:
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+        cp -r ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
+        cp -r ../SukiSU_patch/other/lz4k/lib/* ./common/lib
+        cp -r ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
         cd ./KernelSU
         if [[ "${{ inputs.mksu_branch }}" == "main" ]]; then
           cp ./patch/* ./
@@ -132,6 +136,16 @@ jobs:
         echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+        
+        # Add zram config setting
+        echo "obj-y += lz4k/" >> ./common/lib/Makefile
+        echo "obj-y += lz4kd/" >> ./common/lib/Makefile
+        echo "obj-y += lz4k.o" >> ./common/crypto/Makefile
+        echo "obj-y += lz4kd.o" >> ./common/crypto/Makefile
+        if ! grep -q '^CONFIG_ZRAM=m' ./common/arch/arm64/configs/gki_defconfig; then
+          echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          perl -pi -e 's/static const char \*default_compressor = "lzo-rle";/static const char \*default_compressor = CONFIG_ZRAM_DEF_COMP;/g' ./common/drivers/block/zram/zram_drv.c
+        fi
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
