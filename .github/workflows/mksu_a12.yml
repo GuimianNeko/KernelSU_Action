@@ -55,9 +55,9 @@ jobs:
     - name: Download Kernel Source
       run: |
         cd $GITHUB_WORKSPACE
+        sudo apt update
         sudo apt install -y bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
-        git clone https://github.com/wizxy/kernel_patches.git
         git clone https://github.com/ShirkNeko/SukiSU_patch.git
         git clone https://gerrit.googlesource.com/git-repo
         git config --global user.name "wizxy"
@@ -78,11 +78,9 @@ jobs:
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        cp -r ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
-        cp -r ../SukiSU_patch/other/lz4k/lib/* ./common/lib
-        cp -r ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
-        cp ../kernel_patches/zcomp.c ./common/drivers/block/zram
-        cp ../kernel_patches/Kconfig ./common/drivers/block/zram
+        cp -rf ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
+        cp -rf ../SukiSU_patch/other/lz4k/lib/* ./common/lib
+        cp -rf ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
         
         cd ./KernelSU
         if [[ "${{ inputs.mksu_branch }}" == "main" ]]; then
@@ -91,13 +89,14 @@ jobs:
         fi
         cd ../common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
-        cp ../../kernel_patches/69_hide_stuff.patch ./
+        cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        cp ../../kernel_patches/lz4kd.patch ./
-        patch -p1 -F 3 < lz4kd.patch
+        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/drivers/block/zram/* ./drivers/block/zram/
+        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
+        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
-          cp ../../kernel_patches/hooks/new_hooks.patch ./
+          cp ../../SukiSU_patch/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -145,12 +144,15 @@ jobs:
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         # Add zram config setting
-        echo "obj-y += lz4k/" >> ./common/lib/Makefile
-        echo "obj-y += lz4kd/" >> ./common/lib/Makefile
-        echo "obj-y += lz4k.o" >> ./common/crypto/Makefile
-        echo "obj-y += lz4kd.o" >> ./common/crypto/Makefile
         echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
-        sed -i 's/default_compressor = "lzo-rle"/default_compressor = CONFIG_ZRAM_DEF_COMP/g' ./common/drivers/block/zram/zram_drv.c
+        echo "CONFIG_ZRAM_WRITEBACK=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_ZRAM_DEF_COMP=lz4kd" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_842=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
