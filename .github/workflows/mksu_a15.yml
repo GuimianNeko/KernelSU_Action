@@ -18,6 +18,18 @@ on:
         required: true
         default: 'GuimianNeko'
         description: "自定义主机名称"
+      custom_kernel_name:
+        required: true
+        type: choice
+        description: "是否自定义内核名称？"
+        options:
+          - enable
+          - disable
+        default: enable
+      kernel_name:
+        description: "自定义内核名称"
+        required: true
+        default: '6.6.77-android15-8-g8a843ce91753-abogki383952401-4k'
       ENABLE_MKSU:
         required: true
         type: boolean
@@ -39,19 +51,7 @@ on:
         - newhook
         - disable
         default: 'newhook'
-      custom_kernel_name:
-        required: true
-        type: choice
-        description: "是否自定义内核名称？"
-        options:
-          - enable
-          - disable
-        default: enable
-      kernel_name:
-        description: "自定义内核名称"
-        required: true
-        default: '6.6.77-android15-8-g8a843ce91753-abogki383952401-4k'
-
+      
 jobs:
   build:
     name: Build ${{ inputs.TAG }}
