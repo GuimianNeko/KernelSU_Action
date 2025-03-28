@@ -78,7 +78,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
         git clone https://github.com/TheWildJames/kernel_patches.git
-        git clone https://github.com/Guimianneko/qwq/lz4kd.patch
+        git clone https://github.com/Guimianneko/qwq.git
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
