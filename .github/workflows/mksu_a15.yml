@@ -9,17 +9,24 @@ on:
         required: true
         type: string
         default: "gki-android15-6.6"
-        description: >
-          Set susfs version
+        description: "设置susfs分支"
+      user_name:
+        required: true
+        default: 'root'
+        description: "自定义用户名称"
+      host_name:
+        required: true
+        default: 'GuimianNeko'
+        description: "自定义主机名称"
       ENABLE_MKSU:
         required: true
         type: boolean
         default: true
-        description: 'Enable MKSU'
+        description: '是否使用mksu'
       mksu_branch:
         required: true
         type: choice
-        description: 'Select mksu branch'
+        description: '选择mksu分支'
         options:
         - main
         - susfs-dev
@@ -27,15 +34,15 @@ on:
       manual_vfs_hook:
         required: true
         type: choice
-        description: 'Select manual vfs hook'
+        description: '是否使用vfs hook'
         options:
         - newhook
         - disable
         default: 'newhook'
       custom_kernel_name:
-        description: "是否自定义内核名字？"
         required: true
         type: choice
+        description: "是否自定义内核名称？"
         options:
           - enable
           - disable
@@ -106,11 +113,11 @@ jobs:
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
         cp ../../kernel_patches/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
+        cp ../../qwq/lz4kd.patch ./
+        patch -p1 -F 3 < lz4kd.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../kernel_patches/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
-          cp ../../qwq/lz4kd.patch ./
-          patch -p1 -F 3 < lz4kd.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -155,10 +162,12 @@ jobs:
         echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+        
+        # Add bbrv3 config setting
         echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
-        sed -i '2s/check_defconfig//' ./common/build.config.gki
         
+        sed -i '2s/check_defconfig//' ./common/build.config.gki
         if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
           sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
         fi
@@ -181,6 +190,8 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/android-kernel/clang/bin:$PATH
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
+        export KBUILD_BUILD_USER=${{ inputs.user_name }}
+        export KBUILD_BUILD_HOST=${{ inputs.host_name }}
         cd common
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out gki_defconfig
         scripts/config --file out/.config \
