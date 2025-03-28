@@ -76,8 +76,11 @@ jobs:
       run: |
         sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         cd $GITHUB_WORKSPACE
-        git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
+        git clone
+https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
         git clone https://github.com/TheWildJames/kernel_patches.git
+        git clone
+https://github.com/Guimianneko/qwq/lz4kd.patch
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
@@ -108,6 +111,8 @@ jobs:
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../kernel_patches/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
+          cp ../../qwq/lz4kd.patch ./
+          patch -p1 -F 3 < lz4kd.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -152,7 +157,8 @@ jobs:
         echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-        
+        echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         
         if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
