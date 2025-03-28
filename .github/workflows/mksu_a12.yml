@@ -145,10 +145,10 @@ jobs:
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         # Add zram config setting
-        echo "obj-y += lz4k/" >> ./common/lib/Makefile
-        echo "obj-y += lz4kd/" >> ./common/lib/Makefile
-        echo "obj-y += lz4k.o" >> ./common/crypto/Makefile
-        echo "obj-y += lz4kd.o" >> ./common/crypto/Makefile
+        #echo "obj-y += lz4k/" >> ./common/lib/Makefile
+        #echo "obj-y += lz4kd/" >> ./common/lib/Makefile
+        #echo "obj-y += lz4k.o" >> ./common/crypto/Makefile
+        #echo "obj-y += lz4kd.o" >> ./common/crypto/Makefile
         echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
         sed -i 's/default_compressor = "lzo-rle"/default_compressor = CONFIG_ZRAM_DEF_COMP/g' ./common/drivers/block/zram/zram_drv.c
         
