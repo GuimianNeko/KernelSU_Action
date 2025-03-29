@@ -91,9 +91,11 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
+        cp ../../SukiSU_patch/other/lz4k_patch/5.15/lz4kd.patch ./
+        patch -p1 -F 3 < lz4kd.patch
         cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/drivers/block/zram/* ./drivers/block/zram/
-        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
-        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
+        #cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
+        #cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
