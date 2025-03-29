@@ -84,7 +84,7 @@ jobs:
         sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
-        git clone https://github.com/TheWildJames/kernel_patches.git
+        git clone https://github.com/ShirkNeko/SukiSU_patch.git
         git clone https://github.com/Guimianneko/qwq.git
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
@@ -111,12 +111,12 @@ jobs:
         fi
         cd ../common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
-        cp ../../kernel_patches/69_hide_stuff.patch ./
+        cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         cp ../../qwq/lz4kd.patch ./
         patch -p1 -F 3 < lz4kd.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
-          cp ../../kernel_patches/hooks/new_hooks.patch ./
+          cp ../../SukiSU_patch/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -163,7 +163,7 @@ jobs:
         echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
         
-        # Add bbrv3 config setting
+        # Add zram config setting
         echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
         
