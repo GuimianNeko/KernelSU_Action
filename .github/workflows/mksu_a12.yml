@@ -56,25 +56,18 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         sudo apt update
-        sudo apt install -y bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
+        sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/ShirkNeko/SukiSU_patch.git
-        git clone https://github.com/wizxy/patch.git
-        git clone https://gerrit.googlesource.com/git-repo
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
-        ../git-repo/repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ github.event.inputs.TAG }}
-        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ github.event.inputs.TAG }})
-        DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml          
-        # Check if the branch is deprecated and adjust the manifest
+        REMOTE_BRANCH=$(git ls-remote https://github.com/aosp-mirror/kernel_common ${{ inputs.TAG }})
         if grep -q deprecated <<< $REMOTE_BRANCH; then
-            echo "Found deprecated branch: $FORMATTED_BRANCH"
-            sed -i "s/\"${{ github.event.inputs.TAG }}\"/\"deprecated\/${{ github.event.inputs.TAG }}\"/g" $DEFAULT_MANIFEST_PATH
+          echo "Found deprecated branch: ${{ inputs.TAG }}"
+          git clone --recursive https://github.com/aosp-mirror/kernel_common -b deprecated/${{ inputs.TAG }} common --depth=1
         fi
-        # Verify repo version and sync the kernel source
-        ../git-repo/repo --version
-        ../git-repo/repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
+        git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s ${{ inputs.mksu_branch }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
@@ -92,11 +85,9 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        cp ../../patch/5.10-lz4kd.patch ./
-        patch -p1 -F 3 < 5.10-lz4kd.patch
         cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/drivers/block/zram/* ./drivers/block/zram/
-        #cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
-        #cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
+        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
+        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
