@@ -87,8 +87,8 @@ jobs:
         cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
         cp -rf ../../patch/zram/* ./drivers/block/zram/
-        cp ../../patch/lz4kd.patch ./
-        patch -p1 -F 3 < lz4kd.patch
+        cp ../../patch/5.10-lz4kd.patch ./
+        patch -p1 -F 3 < 5.10-lz4kd.patch
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
