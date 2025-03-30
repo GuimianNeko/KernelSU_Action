@@ -59,6 +59,7 @@ jobs:
         sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/ShirkNeko/SukiSU_patch.git
+        git clone https://github.com/wizxy/patch.git
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
@@ -85,9 +86,9 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         cp ../../SukiSU_patch/69_hide_stuff.patch ./
         patch -p1 -F 3 < 69_hide_stuff.patch
-        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/drivers/block/zram/* ./drivers/block/zram/
-        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/lib/* ./lib/
-        cp -rf ../../SukiSU_patch/other/lz4k_patch/5.10/crypto/* ./crypto/
+        cp -rf ../../patch/zram/* ./drivers/block/zram/
+        cp ../../patch/lz4kd.patch ./
+        patch -p1 -F 3 < lz4kd.patch
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
