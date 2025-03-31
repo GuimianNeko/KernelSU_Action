@@ -225,7 +225,6 @@ jobs:
         name: Boot-${{ github.event.inputs.TAG }}
         path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot*
     - name: Upload Zram.ko
-      if: inputs.ENABLE_MKSU == true
       uses: actions/upload-artifact@v4
       with:
         name: Zram_${{ inputs.TAG }}
