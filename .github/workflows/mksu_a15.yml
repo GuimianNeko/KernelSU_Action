@@ -29,7 +29,7 @@ on:
       kernel_name:
         description: "自定义内核名称"
         required: true
-        default: '6.6.77-android15-8-g8a843ce91753-abogki383952401-4k'
+        default: '6.6.30-android15-8-geae86f166c48-abogki367569362-4k'
       ENABLE_MKSU:
         required: true
         type: boolean
