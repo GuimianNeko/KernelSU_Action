@@ -140,6 +140,12 @@ jobs:
         
         # Add zram config setting
         echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_ZSMALLOC=m" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_CRYPTO_842=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
@@ -164,6 +170,7 @@ jobs:
           -e THINLTO
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out -j$(nproc)
         cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
+        cp -r $GITHUB_WORKSPACE/android-kernel/common/out/drivers/block/zram/zram.ko $GITHUB_WORKSPACE/android-kernel/dist
       
     - name: Download prebuilt toolchain
       run: |
@@ -217,6 +224,11 @@ jobs:
       with:
         name: Boot-${{ github.event.inputs.TAG }}
         path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot*
+    - name: Upload Zram.ko
+      uses: actions/upload-artifact@v4
+      with:
+        name: Zram_${{ inputs.TAG }}
+        path: android-kernel/dist/zram.ko
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
