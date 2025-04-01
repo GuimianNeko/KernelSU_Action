@@ -186,7 +186,7 @@ jobs:
       run: |
         #tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
         mkdir clang
-        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250401-release/Clang-21.0.0git-20250401.tar.gz
+        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250331-release/Clang-21.0.0git-20250331.tar.gz
         tar -C clang/ -zxvf clang.tar.gz
         export KMI_GENERATION=8
         export DEPMOD=depmod
