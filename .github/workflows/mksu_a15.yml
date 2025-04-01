@@ -81,6 +81,7 @@ jobs:
 
     - name: Download Kernel Source
       run: |
+        sudo apt update
         sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
         cd $GITHUB_WORKSPACE
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b ${{ inputs.susfs_version }}
