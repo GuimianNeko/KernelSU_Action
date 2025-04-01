@@ -186,8 +186,13 @@ jobs:
       run: |
         #tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
         mkdir clang
-        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/18.0.0git-20240123-release/Clang-18.0.0git-20240123.tar.gz
+        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250401-release/Clang-21.0.0git-20250401.tar.gz
         tar -C clang/ -zxvf clang.tar.gz
+        export KMI_GENERATION=8
+        export DEPMOD=depmod
+        export STOP_SHIP_TRACEPRINTK=1
+        export IN_KERNEL_MODULES=1
+        export DO_NOT_STRIP_MODULES=1
         export PATH=$GITHUB_WORKSPACE/android-kernel/clang/bin:$PATH
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
