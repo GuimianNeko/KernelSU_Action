@@ -112,8 +112,6 @@ jobs:
         fi
         cd ../common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
-        cp ../../SukiSU_patch/69_hide_stuff.patch ./
-        patch -p1 -F 3 < 69_hide_stuff.patch
         cp ../../qwq/lz4kd.patch ./
         patch -p1 -F 3 < lz4kd.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
