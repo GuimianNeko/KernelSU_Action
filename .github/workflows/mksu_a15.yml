@@ -4,7 +4,7 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android15-6.6-2025-03"
+        default: "android15-6.6-2025-04"
       susfs_version:
         required: true
         type: string
@@ -111,8 +111,8 @@ jobs:
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
-        cp ../../qwq/lz4kd.patch ./
-        patch -p1 -F 3 < lz4kd.patch
+        cp ../../qwq/lz4kd2.patch ./
+        patch -p1 -F 3 < lz4kd2.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
@@ -153,17 +153,6 @@ jobs:
         echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
 
-        # Add bbrv3 config setting
-        echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig 
-        echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-        
         # Add zram config setting
         echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
