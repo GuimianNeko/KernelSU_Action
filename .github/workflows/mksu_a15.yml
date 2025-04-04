@@ -152,16 +152,12 @@ jobs:
         echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
-
-        # Add zram config setting
-        echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
           sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
         fi
-      
+        
     - name: Remove protected symbols
       working-directory: android-kernel
       run: rm common/android/abi_gki_protected_exports_* || echo "No protected exports!"
