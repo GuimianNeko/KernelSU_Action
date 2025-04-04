@@ -193,8 +193,7 @@ jobs:
           cp $GITHUB_WORKSPACE/qwq/patch ./ && chmod +x patch
           ./patch && mv -f oImage Image
         fi
-        cp -r $GITHUB_WORKSPACE/android-kernel/common/out/drivers/block/zram/zram.ko $GITHUB_WORKSPACE/android-kernel/dist
-
+        
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -243,13 +242,6 @@ jobs:
       with:
         name: Boot_${{ inputs.TAG }}
         path: android-kernel/bootimgs/${{ inputs.TAG }}-boot*
-
-    - name: Upload Zram.ko
-      if: inputs.ENABLE_MKSU == true
-      uses: actions/upload-artifact@v4
-      with:
-        name: Zram_${{ inputs.TAG }}
-        path: android-kernel/dist/zram.ko
 
     - name: Upload AnyKernel3
       if: inputs.ENABLE_MKSU == true
