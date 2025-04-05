@@ -38,16 +38,10 @@ jobs:
       CCACHE_MAXSIZE: "2G"
       CCACHE_HARDLINK: "true"
     steps:
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
+    - name: Set swap to 10G
+      uses: pierotofy/set-swap-space@master
       with:
-        root-reserve-mb: 8192
-        temp-reserve-mb: 2048
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-codeql: 'true'
-    - uses: actions/checkout@v4
+        swap-size-gb: 10
     - uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: gki-kernel-aarch64-${{ inputs.TAG }}
@@ -126,20 +120,9 @@ jobs:
         echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
 
-        # Add bbrv3 config setting
-        echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig 
-        echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_NET_SCH_DEFAULT=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_DEFAULT_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-        
         # Add zram config setting
-        echo "CONFIG_ZRAM=m" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_ZSMALLOC=m" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
+        echo "CONFIG_ZSMALLOC=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -174,8 +157,6 @@ jobs:
           cp $GITHUB_WORKSPACE/patch/patch ./ && chmod +x patch
           ./patch && mv -f oImage Image
         fi
-        cp -r $GITHUB_WORKSPACE/android-kernel/common/out/drivers/block/zram/zram.ko $GITHUB_WORKSPACE/android-kernel/dist
-      
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -228,11 +209,6 @@ jobs:
       with:
         name: Boot-${{ github.event.inputs.TAG }}
         path: android-kernel/bootimgs/${{ github.event.inputs.TAG }}-boot*
-    - name: Upload Zram.ko
-      uses: actions/upload-artifact@v4
-      with:
-        name: Zram_${{ inputs.TAG }}
-        path: android-kernel/dist/zram.ko
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
