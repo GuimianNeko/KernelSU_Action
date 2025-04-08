@@ -71,14 +71,14 @@ jobs:
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        cp -rf ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
-        cp -rf ../SukiSU_patch/other/lz4k/lib/* ./common/lib
-        cp -rf ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
+        #cp -rf ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
+        #cp -rf ../SukiSU_patch/other/lz4k/lib/* ./common/lib
+        #cp -rf ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
         
         cd ./common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
-        cp ../../patch/5.10-lz4kd.patch ./
-        patch -p1 -F 3 < 5.10-lz4kd.patch
+        #cp ../../patch/5.10-lz4kd.patch ./
+        #patch -p1 -F 3 < 5.10-lz4kd.patch
 
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
@@ -121,13 +121,13 @@ jobs:
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
 
         # Add zram config setting
-        echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_ZSMALLOC=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
-        echo "CONFIG_CRYPTO_842=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_ZSMALLOC=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
+        #echo "CONFIG_CRYPTO_842=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
