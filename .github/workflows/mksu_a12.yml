@@ -123,11 +123,11 @@ jobs:
       run: |
         LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang"
         cp -r $GITHUB_WORKSPACE/android-kernel/out/*/dist $GITHUB_WORKSPACE/android-kernel/dist
-        #if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
-        #  cd $GITHUB_WORKSPACE/android-kernel/dist
-        #  cp $GITHUB_WORKSPACE/patch/patch ./ && chmod +x patch
-        #  ./patch && mv -f oImage Image
-        #fi
+        if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
+          cd $GITHUB_WORKSPACE/android-kernel/dist
+          cp $GITHUB_WORKSPACE/patch/patch ./ && chmod +x patch
+          ./patch && mv -f oImage Image
+        fi
     - name: Download prebuilt toolchain
       run: |
         cd $GITHUB_WORKSPACE
