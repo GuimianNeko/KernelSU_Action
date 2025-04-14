@@ -49,20 +49,21 @@ jobs:
     - name: Download Kernel Source
       run: |
         cd $GITHUB_WORKSPACE
-        sudo apt update
-        sudo apt install -y repo bc binutils-dev bison build-essential ca-certificates cmake curl file flex git libelf-dev libssl-dev lld make ninja-build python3-dev texinfo u-boot-tools xz-utils zlib1g-dev libncurses-dev pahole
+        sudo apt install repo -y
         git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
         git clone https://github.com/ShirkNeko/SukiSU_patch.git
         git clone https://github.com/wizxy/patch.git
         git config --global user.name "wizxy"
         git config --global user.email wizxy@users.noreply.github.com
         mkdir android-kernel && cd android-kernel
-        REMOTE_BRANCH=$(git ls-remote https://github.com/aosp-mirror/kernel_common ${{ inputs.TAG }})
+        repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${{ inputs.TAG }} --repo-rev=v2.16
+        REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${{ inputs.TAG }})
+        DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
         if grep -q deprecated <<< $REMOTE_BRANCH; then
           echo "Found deprecated branch: ${{ inputs.TAG }}"
-          git clone --recursive https://github.com/aosp-mirror/kernel_common -b deprecated/${{ inputs.TAG }} common --depth=1
+          sed -i 's/"${{ inputs.TAG }}"/"deprecated\/${{ inputs.TAG }}"/g' $DEFAULT_MANIFEST_PATH
         fi
-        git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
+        repo --trace sync -q -c -j$(nproc --all) --no-tags
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
           curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
         else
@@ -71,15 +72,10 @@ jobs:
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        #cp -rf ../SukiSU_patch/other/lz4k/include/linux/* ./common/include/linux
-        #cp -rf ../SukiSU_patch/other/lz4k/lib/* ./common/lib
-        #cp -rf ../SukiSU_patch/other/lz4k/crypto/* ./common/crypto
         
         cd ./common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
-        #cp ../../patch/5.10-lz4kd.patch ./
-        #patch -p1 -F 3 < 5.10-lz4kd.patch
-
+        
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
           patch -p1 -F 3 < new_hooks.patch
@@ -110,7 +106,7 @@ jobs:
         echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
-
+        
         # Add additional tmpfs config setting
         echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -119,39 +115,14 @@ jobs:
         echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
-
-        # Add zram config setting
-        #echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_ZSMALLOC=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_CRYPTO_LZO=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_CRYPTO_LZ4K=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_CRYPTO_LZ4KD=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
-        #echo "CONFIG_CRYPTO_842=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
     - name: Build Boot
       working-directory: android-kernel
       run: |
-        #LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang"
-        mkdir clang
-        wget -O clang.tar.gz https://android.googlesource.com/platform//prebuilts/clang/host/linux-x86/+archive/b669748458572622ed716407611633c5415da25c/clang-r416183b.tar.gz
-        tar -C clang/ -zxvf clang.tar.gz
-        export PATH=$GITHUB_WORKSPACE/android-kernel/clang/bin:$PATH
-        export CROSS_COMPILE=aarch64-linux-gnu-
-        export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
-        export CLANG_TRIPLE=aarch64-linux-gnu-
-        cd common
-        make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out gki_defconfig
-        scripts/config --file out/.config \
-          -e LTO_CLANG \
-          -d LTO_NONE \
-          -e LTO_CLANG_THIN \
-          -d LTO_CLANG_FULL \
-          -e THINLTO
-        make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out -j$(nproc)
-        cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
+        LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang"
+        cp -r $GITHUB_WORKSPACE/android-kernel/out/*/dist $GITHUB_WORKSPACE/android-kernel/dist
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
           cd $GITHUB_WORKSPACE/android-kernel/dist
           cp $GITHUB_WORKSPACE/patch/patch ./ && chmod +x patch
@@ -175,7 +146,6 @@ jobs:
         export UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py
         cd android-kernel && mkdir bootimgs
         cp ./dist/Image ./bootimgs
-        cp ./dist/Image.gz ./bootimgs
         cd ./bootimgs
         GKI_URL=https://dl.google.com/android/gki/gki-certified-boot-${{ github.event.inputs.TAG }}_r1.zip
         FALLBACK_URL=https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2024-01_r1.zip
@@ -193,10 +163,6 @@ jobs:
         $MKBOOTIMG --header_version 4 --kernel Image --output boot.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
         $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
         cp ./boot.img ./${{ github.event.inputs.TAG }}-boot.img
-        echo 'Building boot-gz.img'
-        $MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img --ramdisk out/ramdisk --os_version 12.0.0 --os_patch_level ${{ inputs.patch_level }}
-        $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-        cp ./boot-gz.img ./${{ github.event.inputs.TAG }}-boot-gz.img
     - name: Prepare artifacts
       run: |
         OUTDIR=android-kernel/dist/
