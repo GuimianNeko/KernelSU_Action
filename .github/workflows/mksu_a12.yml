@@ -77,8 +77,8 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
-          cp ../../SukiSU_patch/hooks/new_hooks.patch ./
-          patch -p1 -F 3 < new_hooks.patch
+          cp ../../SukiSU_patch/hooks/syscall_hooks.patch ./
+          patch -p1 -F 3 < syscall_hooks.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -125,7 +125,8 @@ jobs:
         cp -r $GITHUB_WORKSPACE/android-kernel/out/*/dist $GITHUB_WORKSPACE/android-kernel/dist
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
           cd $GITHUB_WORKSPACE/android-kernel/dist
-          cp $GITHUB_WORKSPACE/patch/patch ./ && chmod +x patch
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+          chmod +x patch
           ./patch && mv -f oImage Image
         fi
     - name: Download prebuilt toolchain
