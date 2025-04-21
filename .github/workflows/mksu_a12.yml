@@ -117,6 +117,8 @@ jobs:
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
         sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
+        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Wed Aug 28 22:16:09 UTC 2024"}' ./common/scripts/mkcompile_h
+        
     - name: Build Boot
       working-directory: android-kernel
       run: |
