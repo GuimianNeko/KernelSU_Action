@@ -74,10 +74,8 @@ jobs:
           curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/main/kernel/setup.sh" | bash -s main
           cd ./KernelSU
           cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
-          patch -p1 --forward < 10_enable_susfs_for_ksu.patch
+          patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
           echo "Applying MKSU specific SUSFS patch..."
-          cp ../../kernel_patches/mksu/mksu_susfs.patch ../KernelSU/
-          patch -p1 < mksu_susfs.patch
           cp ../../kernel_patches/mksu/fix.patch ./KernelSU/
           patch -p1 < fix.patch
           cd ..
