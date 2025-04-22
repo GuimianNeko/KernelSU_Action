@@ -73,6 +73,7 @@ jobs:
         else
           curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/main/kernel/setup.sh" | bash -s main
           cd ./KernelSU
+          git revert -m 1 $(git log --grep="remove devpts hook" --pretty=format:"%h") -n
           cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
           patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
           cd ..
@@ -85,8 +86,8 @@ jobs:
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
-          cp ../../SukiSU_patch/hooks/new_hooks.patch ./
-          patch -p1 -F 3 < new_hooks.patch
+          cp ../../SukiSU_patch/hooks/syscall_hooks.patch ./
+          patch -p1 -F 3 < syscall_hooks.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
