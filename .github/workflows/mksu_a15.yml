@@ -26,11 +26,6 @@ on:
         description: "自定义内核名称"
         required: true
         default: '6.6.30-android15-8-geae86f166c48-abogki367569362-4k'
-      ENABLE_MKSU:
-        required: true
-        type: boolean
-        default: true
-        description: '是否使用mksu'
       mksu_version:
         required: true
         type: choice
@@ -142,9 +137,7 @@ jobs:
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
-          sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
-        fi
+        sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
         
     - name: Remove protected symbols
       working-directory: android-kernel
