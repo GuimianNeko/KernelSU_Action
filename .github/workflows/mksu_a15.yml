@@ -23,9 +23,9 @@ on:
         default: 'Wed Aug 28 22:16:09 UTC 2024'
         description: "自定义构建时间"
       kernel_name:
-        description: "自定义内核名称"
         required: true
         default: '6.6.30-android15-8-geae86f166c48-abogki367569362-4k'
+        description: "自定义内核名称"
       mksu_version:
         required: true
         type: choice
