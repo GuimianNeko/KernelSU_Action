@@ -83,7 +83,6 @@ jobs:
         git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         
     - name: Setup KernelSU
-      if: inputs.ENABLE_MKSU == true
       run: |
         cd $GITHUB_WORKSPACE/android-kernel
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
