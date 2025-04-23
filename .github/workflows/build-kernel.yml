@@ -70,7 +70,7 @@ jobs:
       if: env.REMOVE_UNUSED_PACKAGES == 'true'
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: ture
+        tool-cache: true
         android: false
         dotnet: true
         haskell: true
@@ -103,19 +103,19 @@ jobs:
       if: env.USE_CUSTOM_CLANG == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        #if [[ ${{ env.CUSTOM_CLANG_SOURCE }} =~ git ]]; then
-        #    if [[ ${{ env.CUSTOM_CLANG_SOURCE }} == *'.tar.gz' ]]; then
-        #        wget -O clang.tar.gz ${{ env.CUSTOM_CLANG_SOURCE }}
-        #        mkdir clang-aosp
-        #        tar -C clang-aosp/ -zxvf clang.tar.gz
-        #    else
-        #        git clone ${{ env.CUSTOM_CLANG_SOURCE }} -b ${{ env.CUSTOM_CLANG_BRANCH }} clang-aosp --depth=1
-        #   fi
-        #else
+        if [[ ${{ env.CUSTOM_CLANG_SOURCE }} =~ git ]]; then
+            if [[ ${{ env.CUSTOM_CLANG_SOURCE }} == *'.tar.gz' ]]; then
+                wget -O clang.tar.gz ${{ env.CUSTOM_CLANG_SOURCE }}
+                mkdir clang-aosp
+                tar -C clang-aosp/ -zxvf clang.tar.gz
+            else
+                git clone ${{ env.CUSTOM_CLANG_SOURCE }} -b ${{ env.CUSTOM_CLANG_BRANCH }} clang-aosp --depth=1
+            fi
+        else
             wget -O clang.zip ${{ env.CUSTOM_CLANG_SOURCE }}
             mkdir clang-aosp
             unzip clang.zip -d clang-aosp/
-        #fi
+        fi
 
     - name: Download Gcc-aosp
       if: env.USE_CUSTOM_GCC_64 != 'true' || env.USE_CUSTOM_GCC_32 != 'true'
@@ -188,7 +188,7 @@ jobs:
         else
           echo "LOCALVERSION=" >> $GITHUB_ENV
         fi
-        
+
     - name: Download source boot image
       if: env.BUILD_BOOT_IMG == 'true'
       run: |
@@ -248,22 +248,19 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        sed -i 's/TOOLCHAIN_PATH=$HOME\/proton-clang\/proton-clang-20210522\/bin/TOOLCHAIN_PATH=$GITHUB_WORKSPACE\/kernel_workspace\/clang-aosp\/proton-clang-20210522\/bin/g' ./build.sh
-        bash build.sh umi
-
-        #export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/proton-clang-20210522/bin:$PATH
-        #export KBUILD_BUILD_HOST=Github-Action
-        #export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        #if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
-        #  export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
-        #  export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
-        #fi
-        #make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
-        #if [ ${{ env.ENABLE_CCACHE }} = true ]; then
-        #    make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
-        #else
-        #    make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
-        #fi
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
+          export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
+          export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
+        fi
+        make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
+        if [ ${{ env.ENABLE_CCACHE }} = true ]; then
+            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+        else
+            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+        fi
 
     - name: Check a kernel output files
       run: |
