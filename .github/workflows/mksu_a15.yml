@@ -18,6 +18,14 @@ on:
         required: true
         default: 'GuimianNeko'
         description: "自定义主机名称"
+      custom_time:
+        required: true
+        type: choice
+        description: '是否自定义构建时间？'
+        options:
+        - enable
+        - disable
+        default: 'disable'
       timestamp:
         required: true
         default: 'Wed Aug 28 22:16:09 UTC 2024'
@@ -158,7 +166,9 @@ jobs:
         export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
         export KBUILD_BUILD_USER=${{ inputs.user_name }}
         export KBUILD_BUILD_HOST=${{ inputs.host_name }}
-        #export KBUILD_BUILD_TIMESTAMP="${{ inputs.timestamp }}"
+        if [[ "${{ inputs.custom_time }}" == "enable" ]]; then
+          export KBUILD_BUILD_TIMESTAMP="${{ inputs.timestamp }}"
+        fi
         cd common
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out gki_defconfig
         scripts/config --file out/.config \
