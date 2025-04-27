@@ -169,12 +169,12 @@ jobs:
           -e THINLTO
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out -j$(nproc)
         cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
-        #if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
-         # cd $GITHUB_WORKSPACE/android-kernel/dist
-          #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-          #chmod +x patch
-          #./patch && mv -f oImage Image
-        #fi
+        if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
+          cd $GITHUB_WORKSPACE/android-kernel/dist
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+          chmod +x patch
+          ./patch && mv -f oImage Image
+        fi
         
     - name: Download prebuilt toolchain
       run: |
