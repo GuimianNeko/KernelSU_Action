@@ -4,7 +4,7 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android15-6.6-2025-04"
+        default: "android15-6.6-lts"
       susfs_version:
         required: true
         type: string
@@ -18,23 +18,22 @@ on:
         required: true
         default: 'GuimianNeko'
         description: "自定义主机名称"
-      custom_kernel_name:
+      custom_time:
         required: true
         type: choice
-        description: "是否自定义内核名称？"
+        description: '是否自定义构建时间？'
         options:
-          - enable
-          - disable
-        default: enable
+        - enable
+        - disable
+        default: 'disable'
+      timestamp:
+        required: true
+        default: 'Wed Aug 28 22:16:09 UTC 2024'
+        description: "自定义构建时间"
       kernel_name:
-        description: "自定义内核名称"
         required: true
         default: '6.6.30-android15-8-geae86f166c48-abogki367569362-4k'
-      ENABLE_MKSU:
-        required: true
-        type: boolean
-        default: true
-        description: '是否使用mksu'
+        description: "自定义内核名称"
       mksu_version:
         required: true
         type: choice
@@ -92,7 +91,6 @@ jobs:
         git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         
     - name: Setup KernelSU
-      if: inputs.ENABLE_MKSU == true
       run: |
         cd $GITHUB_WORKSPACE/android-kernel
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
@@ -105,11 +103,9 @@ jobs:
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./common
         patch -p1 < 50_add_susfs_in_${{ inputs.susfs_version }}.patch || true
-        cp ../../qwq/lz4kd2.patch ./
-        patch -p1 -F 3 < lz4kd2.patch
         if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
-          cp ../../SukiSU_patch/hooks/new_hooks.patch ./
-          patch -p1 -F 3 < new_hooks.patch
+          cp ../../SukiSU_patch/hooks/syscall_hooks.patch ./
+          patch -p1 -F 3 < syscall_hooks.patch
           cd ..
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -148,9 +144,7 @@ jobs:
         echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        if [[ "${{ inputs.custom_kernel_name }}" == "enable" ]]; then
-          sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
-        fi
+        sed -i '$s|echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
         
     - name: Remove protected symbols
       working-directory: android-kernel
@@ -165,13 +159,16 @@ jobs:
       run: |
         #tools/bazel run --cache_dir=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist || echo "COMPILE_KERNEL=false" >>$GITHUB_ENV
         mkdir clang
-        wget -O clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/18.0.0git-20240123-release/Clang-18.0.0git-20240123.tar.gz
-        tar -C clang/ -zxvf clang.tar.gz
+        wget -qO clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-14.0.0_r33/clang-r510928.tar.gz
+        tar -C clang/ -zxf clang.tar.gz
         export PATH=$GITHUB_WORKSPACE/android-kernel/clang/bin:$PATH
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
         export KBUILD_BUILD_USER=${{ inputs.user_name }}
         export KBUILD_BUILD_HOST=${{ inputs.host_name }}
+        if [[ "${{ inputs.custom_time }}" == "enable" ]]; then
+          export KBUILD_BUILD_TIMESTAMP="${{ inputs.timestamp }}"
+        fi
         cd common
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out gki_defconfig
         scripts/config --file out/.config \
@@ -184,7 +181,8 @@ jobs:
         cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
           cd $GITHUB_WORKSPACE/android-kernel/dist
-          cp $GITHUB_WORKSPACE/qwq/patch ./ && chmod +x patch
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+          chmod +x patch
           ./patch && mv -f oImage Image
         fi
         
@@ -218,7 +216,6 @@ jobs:
         cp ./boot-gz.img ./${{ inputs.TAG }}-boot-gz.img
         
     - name: Prepare artifacts
-      if: inputs.ENABLE_MKSU == true
       run: |
         OUTDIR=android-kernel/out/*/dist
         if [ ! -e $OUTDIR ]; then
@@ -229,31 +226,14 @@ jobs:
         git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
         rm -rf ./AnyKernel3/.git
         cp $OUTDIR/Image ./AnyKernel3/
-
     - name: Upload Boot
-      if: inputs.ENABLE_MKSU == true
       uses: actions/upload-artifact@v4
       with:
         name: Boot_${{ inputs.TAG }}
         path: android-kernel/bootimgs/${{ inputs.TAG }}-boot*
 
     - name: Upload AnyKernel3
-      if: inputs.ENABLE_MKSU == true
       uses: actions/upload-artifact@v4
       with:
           name: AnyKernel3_${{ inputs.TAG }}
-          path: ./AnyKernel3/*
-
-    - name: Upload Boot
-      if: inputs.ENABLE_MKSU == false
-      uses: actions/upload-artifact@v4
-      with:
-        name: Boot_Non-KernelSU_${{ inputs.TAG }}
-        path: ./output/boot.img
-
-    - name: Upload AnyKernel3
-      if: inputs.ENABLE_MKSU == false
-      uses: actions/upload-artifact@v4
-      with:
-          name: AnyKernel3_Non-KernelSU_${{ inputs.TAG }}
           path: ./AnyKernel3/*
