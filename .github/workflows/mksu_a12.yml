@@ -74,8 +74,9 @@ jobs:
         if grep -q deprecated <<< $REMOTE_BRANCH; then
           echo "Found deprecated branch: ${{ inputs.TAG }}"
           git clone --recursive https://github.com/aosp-mirror/kernel_common -b deprecated/${{ inputs.TAG }} common --depth=1
+        else
+          git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         fi
-        git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
           curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
         elif [[ "${{ inputs.mksu_version }}" == "SukiSU" ]]; then
