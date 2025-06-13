@@ -4,11 +4,11 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android12-5.10-2024-05"
+        default: "android12-5.10-2024-11"
       patch_level:
         required: true
         type: string
-        default: "2024-05"
+        default: "2024-11"
         description: "设置内核补丁级别"
       user_name:
         required: true
@@ -20,7 +20,7 @@ on:
         description: "自定义主机名称"
       timestamp:
         required: true
-        default: 'Wed Aug 28 22:16:09 UTC 2024'
+        default: 'Fri Jan 24 18:48:47 UTC 2025'
         description: "自定义构建时间"
       mksu_version:
         required: true
@@ -124,8 +124,8 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
-        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Wed Aug 28 22:16:09 UTC 2024"}' ./common/scripts/mkcompile_h
+        sed -i "\$s/\$res/-android12-9-00064-gea4a6f067d3f-ab12969919/" ./common/scripts/setlocalversion
+        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Fri Jan 24 18:48:47 UTC 2025"}' ./common/scripts/mkcompile_h
         
     - name: Build Boot
       working-directory: android-kernel
