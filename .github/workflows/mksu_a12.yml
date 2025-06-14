@@ -18,6 +18,10 @@ on:
         required: true
         default: 'build-host'
         description: "自定义主机名称"
+      kernel_name:
+        required: true
+        default: '-android12-9-00064-gea4a6f067d3f-ab12969919'
+        description: "自定义内核名称"
       timestamp:
         required: true
         default: 'Fri Jan 24 18:48:47 UTC 2025'
@@ -124,8 +128,8 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "\$s/\$res/-android12-9-00064-gea4a6f067d3f-ab12969919/" ./common/scripts/setlocalversion
-        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Fri Jan 24 18:48:47 UTC 2025"}' ./common/scripts/mkcompile_h
+        sed -i '$s|echo "\$res"|echo "\${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
+        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT ${{ inputs.timestamp }}"}' ./common/scripts/mkcompile_h
         
     - name: Build Boot
       working-directory: android-kernel
