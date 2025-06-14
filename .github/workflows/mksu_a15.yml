@@ -87,8 +87,9 @@ jobs:
         if grep -q deprecated <<< $REMOTE_BRANCH; then
           echo "Found deprecated branch: ${{ inputs.TAG }}"
           git clone --recursive https://github.com/aosp-mirror/kernel_common -b deprecated/${{ inputs.TAG }} common --depth=1
+        else
+          git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         fi
-        git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         
     - name: Setup KernelSU
       run: |

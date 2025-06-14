@@ -4,13 +4,12 @@ on:
     inputs:
       TAG:
         required: true
-        default: "android12-5.10-2024-05"
+        default: "android12-5.10-2024-11"
       patch_level:
         required: true
         type: string
-        default: "2024-05"
-        description: >
-          Set Kernel patch level
+        default: "2024-11"
+        description: "设置内核补丁级别"
       user_name:
         required: true
         default: 'build-user'
@@ -19,26 +18,38 @@ on:
         required: true
         default: 'build-host'
         description: "自定义主机名称"
+      kernel_name:
+        required: true
+        default: '-android12-9-00064-gea4a6f067d3f-ab12969919'
+        description: "自定义内核名称"
       timestamp:
         required: true
-        default: 'Wed Aug 28 22:16:09 UTC 2024'
+        default: 'Fri Jan 24 18:48:47 UTC 2025'
         description: "自定义构建时间"
       mksu_version:
         required: true
         type: choice
-        description: 'Select mksu version'
+        description: '选择mksu版本'
         options:
-        - SukiSU
-        - SukiSU-Ultra
-        default: 'SukiSU-Ultra'
+        - susfs-main
+        - susfs-dev
+        default: 'susfs-main'
+      mksu_kpm:
+        required: true
+        type: choice
+        description: '是否开启KPM？'
+        options:
+        - enable
+        - disable
+        default: 'enable'
       manual_vfs_hook:
         required: true
         type: choice
-        description: 'Select manual vfs hook'
+        description: '是否开启手动钩子？'
         options:
-        - newhook
+        - enable
         - disable
-        default: 'newhook'
+        default: 'enable'
 
 jobs:
   build:
@@ -74,13 +85,10 @@ jobs:
         if grep -q deprecated <<< $REMOTE_BRANCH; then
           echo "Found deprecated branch: ${{ inputs.TAG }}"
           git clone --recursive https://github.com/aosp-mirror/kernel_common -b deprecated/${{ inputs.TAG }} common --depth=1
+        else
+          git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
         fi
-        git clone --recursive https://github.com/aosp-mirror/kernel_common -b ${{ inputs.TAG }} common --depth=1
-        if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
-        elif [[ "${{ inputs.mksu_version }}" == "SukiSU" ]]; then
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s susfs-dev
-        fi
+        curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s ${{ inputs.mksu_version }}
         cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ./common/
         cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
@@ -88,7 +96,7 @@ jobs:
         cd ./common
         patch -p1 < 50_add_susfs_in_gki-android12-5.10.patch || true
         
-        if [[ "${{ inputs.manual_vfs_hook }}" == "newhook" ]]; then
+        if [[ "${{ inputs.manual_vfs_hook }}" == "enable" ]]; then
           cp ../../SukiSU_patch/hooks/syscall_hooks.patch ./
           patch -p1 -F 3 < syscall_hooks.patch
           cd ..
@@ -98,7 +106,7 @@ jobs:
           cd ..
           echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
         fi
-        if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
+        if [[ "${{ inputs.mksu_kpm }}" == "enable" ]]; then
           echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
         fi
         echo "Adding configuration settings to gki_defconfig..."
@@ -120,8 +128,8 @@ jobs:
         echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
         
         sed -i '2s/check_defconfig//' ./common/build.config.gki
-        sed -i "\$s/\$res/-android12-9-00019-g4ea09a298bb4-ab12292661/" ./common/scripts/setlocalversion
-        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Wed Aug 28 22:16:09 UTC 2024"}' ./common/scripts/mkcompile_h
+        sed -i '$s|echo "\$res"|echo "${{ inputs.kernel_name }}"|' ./common/scripts/setlocalversion
+        perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT ${{ inputs.timestamp }}"}' ./common/scripts/mkcompile_h
         
     - name: Build Boot
       working-directory: android-kernel
@@ -146,7 +154,7 @@ jobs:
           -e THINLTO
         make LLVM=1 LLVM_IAS=1 ARCH=arm64 CC="/usr/bin/ccache clang" HOSTCC="/usr/bin/ccache clang" HOSTCXX="/usr/bin/ccache clang++" O=out -j$(nproc)
         cp -r $GITHUB_WORKSPACE/android-kernel/common/out/arch/arm64/boot $GITHUB_WORKSPACE/android-kernel/dist
-        if [[ "${{ inputs.mksu_version }}" == "SukiSU-Ultra" ]]; then
+        if [[ "${{ inputs.mksu_kpm }}" == "enable" ]]; then
           cd $GITHUB_WORKSPACE/android-kernel/dist
           curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
           chmod +x patch
